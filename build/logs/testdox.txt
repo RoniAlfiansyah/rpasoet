@@ -1,0 +1,13 @@
+Health
+ [x] Is defined app path
+ [x] Base url has been set
+
+Tide Fetcher
+ [x] Fetch uses short lived srgi access token
+ [x] Fetch refreshes access token once after unauthorized response
+ [x] Access token request retries after rate limit
+ [x] Fresh cached token is reused by next fetcher instance
+
+Tides Controller Date Scoping
+ [x] Completeness and gap fill use utc day boundaries
+

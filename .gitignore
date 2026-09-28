@@ -1,0 +1,31 @@
+# Environment & Credentials
+.env
+.env.backup
+*.env.local
+
+# CodeIgniter Writable Runtime Directories
+/writable/cache/*
+!/writable/cache/index.html
+/writable/logs/*
+!/writable/logs/index.html
+/writable/session/*
+!/writable/session/index.html
+/writable/debugbar/*
+/writable/admiralty-excel/*
+!/writable/admiralty-excel/index.html
+/writable/tmp_template_inspect/*
+/writable/product-profile/*
+
+# Local SQL dumps and Archives
+rpasoet_*.zip
+rpasoet_*.sql
+*.tar.gz
+*.rar
+wip_*
+sample_pasut_*.csv
+
+# OS & Editor
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

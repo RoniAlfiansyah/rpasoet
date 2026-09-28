@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="CLI Arguments" tests="7" assertions="39" errors="0" failures="0" skipped="0" time="0.074541">
+    <testsuite name="HealthTest" file="C:\xampp\htdocs\rpasoet\tests\unit\HealthTest.php" tests="2" assertions="3" errors="0" failures="0" skipped="0" time="0.041180">
+      <testcase name="testIsDefinedAppPath" file="C:\xampp\htdocs\rpasoet\tests\unit\HealthTest.php" line="12" class="HealthTest" classname="HealthTest" assertions="1" time="0.029508"/>
+      <testcase name="testBaseUrlHasBeenSet" file="C:\xampp\htdocs\rpasoet\tests\unit\HealthTest.php" line="17" class="HealthTest" classname="HealthTest" assertions="2" time="0.011672"/>
+    </testsuite>
+    <testsuite name="TideFetcherTest" file="C:\xampp\htdocs\rpasoet\tests\unit\TideFetcherTest.php" tests="4" assertions="25" errors="0" failures="0" skipped="0" time="0.025538">
+      <testcase name="testFetchUsesShortLivedSrgiAccessToken" file="C:\xampp\htdocs\rpasoet\tests\unit\TideFetcherTest.php" line="28" class="TideFetcherTest" classname="TideFetcherTest" assertions="12" time="0.006472"/>
+      <testcase name="testFetchRefreshesAccessTokenOnceAfterUnauthorizedResponse" file="C:\xampp\htdocs\rpasoet\tests\unit\TideFetcherTest.php" line="52" class="TideFetcherTest" classname="TideFetcherTest" assertions="4" time="0.005544"/>
+      <testcase name="testAccessTokenRequestRetriesAfterRateLimit" file="C:\xampp\htdocs\rpasoet\tests\unit\TideFetcherTest.php" line="70" class="TideFetcherTest" classname="TideFetcherTest" assertions="5" time="0.007645"/>
+      <testcase name="testFreshCachedTokenIsReusedByNextFetcherInstance" file="C:\xampp\htdocs\rpasoet\tests\unit\TideFetcherTest.php" line="95" class="TideFetcherTest" classname="TideFetcherTest" assertions="4" time="0.005877"/>
+    </testsuite>
+    <testsuite name="TidesControllerDateScopingTest" file="C:\xampp\htdocs\rpasoet\tests\unit\TidesControllerDateScopingTest.php" tests="1" assertions="11" errors="0" failures="0" skipped="0" time="0.007822">
+      <testcase name="testCompletenessAndGapFillUseUtcDayBoundaries" file="C:\xampp\htdocs\rpasoet\tests\unit\TidesControllerDateScopingTest.php" line="11" class="TidesControllerDateScopingTest" classname="TidesControllerDateScopingTest" assertions="11" time="0.007822"/>
+    </testsuite>
+  </testsuite>
+</testsuites>

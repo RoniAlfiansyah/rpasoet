@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>R-Pasoet | Modern Admiralty Tide Predictor</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .glass-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(226, 232, 240, 0.9);
+    }
+    .step-active {
+      background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+      color: white;
+      box-shadow: 0 4px 14px 0 rgba(14, 165, 233, 0.35);
+    }
+    .step-done {
+      background: #ecfdf5;
+      color: #059669;
+      border: 1px solid #a7f3d0;
+    }
+    .step-idle {
+      background: #f8fafc;
+      color: #64748b;
+      border: 1px solid #e2e8f0;
+    }
+    .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col">
+
+  <!-- TOP APP BAR -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-xs">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-600 to-sky-500 flex items-center justify-center text-white shadow-md shadow-sky-500/20">
+          <i class="fa-solid fa-water text-lg"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-extrabold text-xl tracking-tight text-slate-900">R-PASOET</span>
+            <span class="text-xs px-2 py-0.5 rounded-full font-semibold bg-sky-100 text-sky-800 border border-sky-200">v2.0 Prototype</span>
+          </div>
+          <p class="text-xs text-slate-500">Analisis Harmonik Pasang Surut Metode Admiralty & Prediksi</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <a href="http://localhost/rpasoet/admiralty" class="text-xs font-semibold text-slate-600 hover:text-sky-600 px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 transition">
+          <i class="fa-solid fa-arrow-left mr-1.5"></i>Tampilan Saat Ini
+        </a>
+        <button onclick="resetPrototype()" class="text-xs font-semibold text-rose-600 hover:text-rose-700 px-3 py-1.5 rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 transition">
+          <i class="fa-solid fa-rotate-left mr-1.5"></i>Reset Demo
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full flex flex-col gap-6">
+
+    <!-- STEPPER PROGRESS BAR -->
+    <div class="glass-card rounded-2xl p-4 shadow-sm border border-slate-200/80">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-3" id="stepperNav">
+        <!-- Step 1 -->
+        <button onclick="goToStep(1)" id="stepBtn-1" class="step-active flex items-center gap-3 p-3.5 rounded-xl transition text-left cursor-pointer">
+          <div id="stepNum-1" class="w-8 h-8 rounded-lg bg-white/20 text-white flex items-center justify-center font-bold text-sm">1</div>
+          <div>
+            <div class="text-xs font-medium opacity-90 uppercase tracking-wider">Tahap 1</div>
+            <div class="font-bold text-sm">Kurasi & Validasi Data</div>
+          </div>
+        </button>
+        <!-- Step 2 -->
+        <button onclick="goToStep(2)" id="stepBtn-2" class="step-idle flex items-center gap-3 p-3.5 rounded-xl transition text-left cursor-pointer">
+          <div id="stepNum-2" class="w-8 h-8 rounded-lg bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-sm">2</div>
+          <div>
+            <div class="text-xs font-medium opacity-75 uppercase tracking-wider">Tahap 2</div>
+            <div class="font-bold text-sm">Pilihan Model & Hitung</div>
+          </div>
+        </button>
+        <!-- Step 3 -->
+        <button onclick="goToStep(3)" id="stepBtn-3" class="step-idle flex items-center gap-3 p-3.5 rounded-xl transition text-left cursor-pointer">
+          <div id="stepNum-3" class="w-8 h-8 rounded-lg bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-sm">3</div>
+          <div>
+            <div class="text-xs font-medium opacity-75 uppercase tracking-wider">Tahap 3</div>
+            <div class="font-bold text-sm">Hasil Harmonik & Evaluasi</div>
+          </div>
+        </button>
+        <!-- Step 4 -->
+        <button onclick="goToStep(4)" id="stepBtn-4" class="step-idle flex items-center gap-3 p-3.5 rounded-xl transition text-left cursor-pointer">
+          <div id="stepNum-4" class="w-8 h-8 rounded-lg bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-sm">4</div>
+          <div>
+            <div class="text-xs font-medium opacity-75 uppercase tracking-wider">Tahap 4</div>
+            <div class="font-bold text-sm">Prediksi & Ekspor</div>
+          </div>
+        </button>
+      </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- STEP 1 CONTENT: UPLOAD & VALIDASI -->
+    <!-- ============================================================== -->
+    <div id="stepContent-1" class="flex flex-col gap-6">
+      
+      <!-- Top banner helper -->
+      <div class="bg-gradient-to-r from-sky-500/10 via-cyan-500/5 to-transparent border border-sky-200/80 rounded-2xl p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div class="flex items-start gap-3">
+          <div class="w-10 h-10 rounded-xl bg-sky-100 text-sky-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+            <i class="fa-solid fa-wand-magic-sparkles text-lg"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-slate-900 text-base">Mulai dengan Mudah & Cepat</h3>
+            <p class="text-sm text-slate-600">Unggah berkas observasi pasut Anda (.CSV, .TXT, .XLSX) atau gunakan contoh data 1 bulan yang siap uji.</p>
+          </div>
+        </div>
+        <button onclick="loadSampleData()" class="flex-shrink-0 bg-sky-600 hover:bg-sky-700 text-white font-semibold text-sm px-4 py-2.5 rounded-xl shadow-sm shadow-sky-600/20 transition flex items-center gap-2">
+          <i class="fa-solid fa-bolt-lightning text-amber-300"></i>
+          <span>Gunakan Data Sample 30 Hari</span>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Form Upload Column -->
+        <div class="lg:col-span-7 flex flex-col gap-5">
+          <div class="glass-card rounded-2xl p-6 shadow-sm border border-slate-200/80">
+            <h3 class="font-bold text-slate-900 text-lg mb-4 flex items-center gap-2">
+              <i class="fa-regular fa-folder-open text-sky-600"></i>
+              Formulir Data Observasi
+            </h3>
+
+            <!-- Metadata Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">Nama Stasiun</label>
+                <input type="text" id="demoStation" value="Stasiun Kolono - Kendari" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none bg-white">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">Zona Waktu</label>
+                <select id="demoTimezone" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none bg-white">
+                  <option value="Asia/Jakarta">(GMT+7) WIB - Asia/Jakarta</option>
+                  <option value="Asia/Makassar" selected>(GMT+8) WITA - Asia/Makassar</option>
+                  <option value="Asia/Jayapura">(GMT+9) WIT - Asia/Jayapura</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">Latitude</label>
+                <input type="text" id="demoLat" value="-4.124500" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none bg-white">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">Longitude</label>
+                <input type="text" id="demoLon" value="122.682100" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none bg-white">
+              </div>
+            </div>
+
+            <!-- Drag & Drop Zone -->
+            <div id="dropZone" class="border-2 border-dashed border-sky-300 bg-sky-50/50 hover:bg-sky-50 transition rounded-2xl p-8 text-center flex flex-col items-center justify-center cursor-pointer mb-5">
+              <div class="w-14 h-14 rounded-2xl bg-white text-sky-600 shadow-sm border border-sky-100 flex items-center justify-center text-2xl mb-3">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+              </div>
+              <p class="font-bold text-slate-800 text-sm mb-1" id="fileLabel">Pilih atau seret berkas pasut ke sini</p>
+              <p class="text-xs text-slate-500 mb-3">Format didukung: .CSV, .TXT, atau .XLSX (Kolom Tanggal/Jam & Elevasi)</p>
+              <span class="inline-block text-xs font-semibold text-sky-700 bg-sky-100 px-3 py-1 rounded-full">
+                Maks. 720 Titik (15 s.d. 30 Hari Observasi)
+              </span>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <button onclick="simulateValidation()" id="btnValidate" class="flex-1 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm py-3 rounded-xl transition flex items-center justify-center gap-2 shadow-sm">
+                <i class="fa-solid fa-circle-check text-emerald-400"></i>
+                <span id="btnValidateText">Validasi File Observasi</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Validation Results / Quality Health Column -->
+        <div class="lg:col-span-5 flex flex-col gap-5">
+          <div class="glass-card rounded-2xl p-6 shadow-sm border border-slate-200/80 flex flex-col justify-between h-full">
+            <div>
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="font-bold text-slate-900 text-lg flex items-center gap-2">
+                  <i class="fa-solid fa-heart-pulse text-rose-500"></i>
+                  Evaluasi Kelayakan Data
+                </h3>
+                <span id="healthBadge" class="text-xs font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-500 border border-slate-200">
+                  Menunggu Validasi
+                </span>
+              </div>
+
+              <!-- Metric Grid -->
+              <div class="grid grid-cols-2 gap-3 mb-5">
+                <div class="bg-slate-50 border border-slate-200/60 rounded-xl p-3.5">
+                  <div class="text-xs text-slate-500 mb-0.5">Jumlah Data Valid</div>
+                  <div class="text-2xl font-extrabold text-slate-900" id="resCount">-</div>
+                  <div class="text-[11px] text-slate-500 mt-0.5" id="resCountSub">Min. 360 data</div>
+                </div>
+                <div class="bg-slate-50 border border-slate-200/60 rounded-xl p-3.5">
+                  <div class="text-xs text-slate-500 mb-0.5">Interval Waktu</div>
+                  <div class="text-2xl font-extrabold text-slate-900" id="resInterval">-</div>
+                  <div class="text-[11px] text-slate-500 mt-0.5" id="resIntervalSub">Target: 60 menit</div>
+                </div>
+                <div class="bg-slate-50 border border-slate-200/60 rounded-xl p-3.5">
+                  <div class="text-xs text-slate-500 mb-0.5">Deteksi Gap / Hilang</div>
+                  <div class="text-2xl font-extrabold text-slate-900" id="resGap">-</div>
+                  <div class="text-[11px] text-slate-500 mt-0.5">Maks. 2 segmen toleransi</div>
+                </div>
+                <div class="bg-slate-50 border border-slate-200/60 rounded-xl p-3.5">
+                  <div class="text-xs text-slate-500 mb-0.5">Duplikasi Timestamp</div>
+                  <div class="text-2xl font-extrabold text-slate-900" id="resDup">-</div>
+                  <div class="text-[11px] text-slate-500 mt-0.5">0 duplikat disarankan</div>
+                </div>
+              </div>
+
+              <!-- Timeline Preview -->
+              <div class="border border-slate-200 rounded-xl p-3.5 bg-white mb-5 text-xs text-slate-600 flex flex-col gap-1.5">
+                <div class="flex justify-between font-medium">
+                  <span class="text-slate-400">Rentang Observasi:</span>
+                  <span id="resRange" class="font-semibold text-slate-800">- s.d. -</span>
+                </div>
+                <div class="flex justify-between font-medium">
+                  <span class="text-slate-400">Rerata Muka Air (MSL):</span>
+                  <span id="resMsl" class="font-semibold text-slate-800">-</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 1 Action Footer -->
+            <div class="pt-4 border-t border-slate-100 flex items-center justify-between">
+              <span class="text-xs text-slate-500" id="statusMessage">Silakan validasi data terlebih dahulu.</span>
+              <button onclick="goToStep(2)" id="btnStep1Next" disabled class="bg-sky-600 hover:bg-sky-700 disabled:bg-slate-200 disabled:text-slate-400 text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition flex items-center gap-2 cursor-pointer disabled:cursor-not-allowed">
+                <span>Lanjut ke Pilihan Model</span>
+                <i class="fa-solid fa-arrow-right"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- STEP 2 CONTENT: MODEL SELECTION & CALCULATION -->
+    <!-- ============================================================== -->
+    <div id="stepContent-2" class="hidden flex flex-col gap-6">
+      <div class="glass-card rounded-2xl p-6 shadow-sm border border-slate-200/80">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h3 class="font-bold text-slate-900 text-lg">Pilih Model Perhitungan Admiralty</h3>
+            <p class="text-sm text-slate-500">Anda dapat memilih satu atau beberapa metode sekaligus untuk membandingkan akurasinya.</p>
+          </div>
+          <span class="text-xs font-semibold px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+            <i class="fa-solid fa-check-circle mr-1"></i>Dataset Siap Dihitung
+          </span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <!-- Model 1 -->
+          <label class="relative flex flex-col justify-between p-5 rounded-2xl border-2 border-sky-500 bg-sky-50/40 cursor-pointer hover:bg-sky-50 transition">
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-bold px-2 py-0.5 rounded-md bg-sky-600 text-white">Rekomendasi</span>
+                <input type="checkbox" checked class="w-5 h-5 rounded text-sky-600 focus:ring-sky-500">
+              </div>
+              <h4 class="font-bold text-slate-900 text-base mb-1">Admiralty Indonesia</h4>
+              <p class="text-xs text-slate-600 leading-relaxed">Standar baku Dishidros TNI AL, menghasilkan 9 konstanta utama dengan tabel Form 20.</p>
+            </div>
+            <div class="text-[11px] font-semibold text-sky-700 mt-4 pt-3 border-t border-sky-200">
+              9 Komponen Utama + Formzahl
+            </div>
+          </label>
+
+          <!-- Model 2 -->
+          <label class="relative flex flex-col justify-between p-5 rounded-2xl border border-slate-200 bg-white cursor-pointer hover:bg-slate-50 transition">
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-medium px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">Klasik</span>
+                <input type="checkbox" checked class="w-5 h-5 rounded text-sky-600 focus:ring-sky-500">
+              </div>
+              <h4 class="font-bold text-slate-900 text-base mb-1">Admiralty Hidros</h4>
+              <p class="text-xs text-slate-600 leading-relaxed">Formulasi matriks 29 piantan hidrografi untuk validasi manual survei laut.</p>
+            </div>
+            <div class="text-[11px] font-semibold text-slate-600 mt-4 pt-3 border-t border-slate-100">
+              Matriks Piantan Hidros
+            </div>
+          </label>
+
+          <!-- Model 3 -->
+          <label class="relative flex flex-col justify-between p-5 rounded-2xl border border-slate-200 bg-white cursor-pointer hover:bg-slate-50 transition">
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-medium px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">IHO Cat A</span>
+                <input type="checkbox" class="w-5 h-5 rounded text-sky-600 focus:ring-sky-500">
+              </div>
+              <h4 class="font-bold text-slate-900 text-base mb-1">Admiralty Cat A</h4>
+              <p class="text-xs text-slate-600 leading-relaxed">Penyelarasan parameter referensi standar hidrografi internasional (Cat A).</p>
+            </div>
+            <div class="text-[11px] font-semibold text-slate-600 mt-4 pt-3 border-t border-slate-100">
+              Standar Organisasi Hidrografi
+            </div>
+          </label>
+
+          <!-- Model 4 -->
+          <label class="relative flex flex-col justify-between p-5 rounded-2xl border border-slate-200 bg-white cursor-pointer hover:bg-slate-50 transition">
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-medium px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">Regresi</span>
+                <input type="checkbox" checked class="w-5 h-5 rounded text-sky-600 focus:ring-sky-500">
+              </div>
+              <h4 class="font-bold text-slate-900 text-base mb-1">Least Square</h4>
+              <p class="text-xs text-slate-600 leading-relaxed">Pencocokan kuadrat terkecil langsung dari kurva observasi untuk kontrol RMSE.</p>
+            </div>
+            <div class="text-[11px] font-semibold text-slate-600 mt-4 pt-3 border-t border-slate-100">
+              Evaluasi Error Minimum
+            </div>
+          </label>
+        </div>
+
+        <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <button onclick="goToStep(1)" class="px-4 py-2.5 rounded-xl border border-slate-300 text-sm font-semibold text-slate-700 hover:bg-slate-100 transition">
+              <i class="fa-solid fa-arrow-left mr-1.5"></i>Kembali
+            </button>
+            <span class="text-xs text-slate-500">3 Model terpilih siap diproses secara paralel.</span>
+          </div>
+          <button onclick="simulateCalculation()" id="btnStartCalc" class="bg-gradient-to-r from-sky-600 to-cyan-600 hover:from-sky-700 hover:to-cyan-700 text-white font-bold text-sm px-6 py-2.5 rounded-xl shadow-md shadow-sky-600/25 transition flex items-center gap-2">
+            <i class="fa-solid fa-calculator"></i>
+            <span id="btnStartCalcText">Mulai Hitung Admiralty</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- STEP 3 CONTENT: HARMONIC RESULTS & EVALUATION -->
+    <!-- ============================================================== -->
+    <div id="stepContent-3" class="hidden flex flex-col gap-6">
+      
+      <!-- Key Summary Tiles -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="glass-card rounded-2xl p-5 shadow-sm border border-slate-200/80">
+          <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Tipe Pasang Surut</div>
+          <div class="text-xl font-extrabold text-sky-600">Campuran Ganda</div>
+          <div class="text-xs text-slate-500 mt-1">Formzahl Ratio: <strong>F = 0.74</strong></div>
+        </div>
+        <div class="glass-card rounded-2xl p-5 shadow-sm border border-slate-200/80">
+          <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Mean Sea Level (S0)</div>
+          <div class="text-xl font-extrabold text-slate-900">1.65 m</div>
+          <div class="text-xs text-slate-500 mt-1">Rerata muka air laut tenang</div>
+        </div>
+        <div class="glass-card rounded-2xl p-5 shadow-sm border border-slate-200/80">
+          <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Tunggang Pasut (Range)</div>
+          <div class="text-xl font-extrabold text-emerald-600">1.94 m</div>
+          <div class="text-xs text-slate-500 mt-1">Selisih pasang - surut maksimum</div>
+        </div>
+        <div class="glass-card rounded-2xl p-5 shadow-sm border border-slate-200/80">
+          <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Akurasi Model Terbaik</div>
+          <div class="text-xl font-extrabold text-indigo-600">RMSE 0.08 m</div>
+          <div class="text-xs text-slate-500 mt-1">Admiralty Indonesia (92% fit)</div>
+        </div>
+      </div>
+
+      <!-- Chart & Table Split -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Interactive Chart -->
+        <div class="lg:col-span-7 glass-card rounded-2xl p-6 shadow-sm border border-slate-200/80 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <h3 class="font-bold text-slate-900 text-lg">Perbandingan Kurva Pasut 15 Hari</h3>
+                <p class="text-xs text-slate-500">Hasil simulasi model Admiralty vs Data observasi riil di lapangan.</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600 bg-slate-100 px-2.5 py-1 rounded-md">
+                  <span class="w-2.5 h-2.5 rounded-full bg-slate-900"></span> Observasi
+                </span>
+                <span class="inline-flex items-center gap-1.5 text-xs font-medium text-sky-700 bg-sky-50 px-2.5 py-1 rounded-md">
+                  <span class="w-2.5 h-2.5 rounded-full bg-sky-500"></span> Admiralty
+                </span>
+              </div>
+            </div>
+            <div class="h-64 w-full">
+              <canvas id="comparisonChart"></canvas>
+            </div>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+            <span>Fase dan amplitudo telah dikalibrasi secara otomatis.</span>
+            <span class="font-semibold text-slate-700">360 Titik Waktu Disinkronkan</span>
+          </div>
+        </div>
+
+        <!-- Harmonic Constituents Table -->
+        <div class="lg:col-span-5 glass-card rounded-2xl p-6 shadow-sm border border-slate-200/80">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-bold text-slate-900 text-lg">9 Konstanta Harmonik</h3>
+            <span class="text-xs text-slate-500 font-mono">Form 20 Dishidros</span>
+          </div>
+          <div class="overflow-x-auto custom-scroll max-h-72">
+            <table class="w-full text-xs text-left">
+              <thead class="text-slate-400 bg-slate-50 uppercase tracking-wider sticky top-0">
+                <tr>
+                  <th class="p-2.5">Komponen</th>
+                  <th class="p-2.5">Nama</th>
+                  <th class="p-2.5">A (cm)</th>
+                  <th class="p-2.5">g° (Fase)</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 text-slate-700 font-medium font-mono">
+                <tr><td class="p-2.5 font-bold text-sky-600">M2</td><td class="p-2.5 font-sans">Bulan Utama</td><td class="p-2.5">48.2</td><td class="p-2.5">42.0°</td></tr>
+                <tr><td class="p-2.5 font-bold text-sky-600">S2</td><td class="p-2.5 font-sans">Matahari Utama</td><td class="p-2.5">22.1</td><td class="p-2.5">88.0°</td></tr>
+                <tr><td class="p-2.5 font-bold text-sky-600">N2</td><td class="p-2.5 font-sans">Elips Bulan</td><td class="p-2.5">10.3</td><td class="p-2.5">25.0°</td></tr>
+                <tr><td class="p-2.5 font-bold text-sky-600">K1</td><td class="p-2.5 font-sans">Deklinasi Bulan-Matahari</td><td class="p-2.5">38.4</td><td class="p-2.5">115.0°</td></tr>
+                <tr><td class="p-2.5 font-bold text-sky-600">O1</td><td class="p-2.5 font-sans">Deklinasi Bulan</td><td class="p-2.5">26.0</td><td class="p-2.5">65.0°</td></tr>
+                <tr><td class="p-2.5 font-bold text-sky-600">P1</td><td class="p-2.5 font-sans">Deklinasi Matahari</td><td class="p-2.5">12.1</td><td class="p-2.5">110.0°</td></tr>
+                <tr><td class="p-2.5 font-bold text-sky-600">M4</td><td class="p-2.5 font-sans">Air Dangkal</td><td class="p-2.5">4.2</td><td class="p-2.5">200.0°</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
+            <button onclick="goToStep(2)" class="px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition">
+              <i class="fa-solid fa-arrow-left mr-1"></i>Model
+            </button>
+            <button onclick="goToStep(4)" class="bg-sky-600 hover:bg-sky-700 text-white font-semibold text-xs px-4 py-2 rounded-xl transition flex items-center gap-1.5">
+              <span>Buka Generator Prediksi</span>
+              <i class="fa-solid fa-arrow-right"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- STEP 4 CONTENT: PREDICTION & EXPORT -->
+    <!-- ============================================================== -->
+    <div id="stepContent-4" class="hidden flex flex-col gap-6">
+      
+      <!-- Prediction Control Card -->
+      <div class="glass-card rounded-2xl p-6 shadow-sm border border-slate-200/80">
+        <h3 class="font-bold text-slate-900 text-lg mb-4 flex items-center gap-2">
+          <i class="fa-solid fa-calendar-check text-sky-600"></i>
+          Konfigurasi Generator Prediksi
+        </h3>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">Model Acuan</label>
+            <select class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none bg-white">
+              <option selected>Admiralty Indonesia (Terbaik)</option>
+              <option>Admiralty Hidros</option>
+              <option>Least Square</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">Waktu Mulai</label>
+            <input type="datetime-local" value="2026-09-01T00:00" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none bg-white">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">Waktu Akhir</label>
+            <input type="datetime-local" value="2026-09-07T23:00" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none bg-white">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">Interval Waktu</label>
+            <select class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none bg-white">
+              <option value="10">10 Menit (Detail Tinggi)</option>
+              <option value="15">15 Menit</option>
+              <option value="30">30 Menit</option>
+              <option value="60" selected>60 Menit (Standar 1 Jam)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Quick Presets -->
+        <div class="flex items-center gap-2 mb-5">
+          <span class="text-xs text-slate-500 font-medium">Preset Cepat:</span>
+          <button class="text-xs px-3 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition">7 Hari</button>
+          <button class="text-xs px-3 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition">14 Hari (Purnama-Perbani)</button>
+          <button class="text-xs px-3 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition">1 Bulan Kalender</button>
+        </div>
+
+        <div class="flex items-center justify-between pt-4 border-t border-slate-100">
+          <button onclick="goToStep(3)" class="px-4 py-2 rounded-xl border border-slate-300 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition">
+            <i class="fa-solid fa-arrow-left mr-1.5"></i>Kembali ke Harmonik
+          </button>
+          <div class="flex items-center gap-2">
+            <button class="px-4 py-2.5 rounded-xl border border-slate-300 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition flex items-center gap-2">
+              <i class="fa-solid fa-file-pdf text-rose-500"></i>Cetak Laporan PDF
+            </button>
+            <button class="px-4 py-2.5 rounded-xl border border-slate-300 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition flex items-center gap-2">
+              <i class="fa-solid fa-file-excel text-emerald-600"></i>Ekspor CSV / Excel
+            </button>
+            <button class="bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl transition flex items-center gap-2 shadow-sm">
+              <i class="fa-solid fa-rotate mr-1"></i>Generate Ulang
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Forecast Graph -->
+      <div class="glass-card rounded-2xl p-6 shadow-sm border border-slate-200/80">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h3 class="font-bold text-slate-900 text-lg">Grafik Elevasi Pasang Surut Terprediksi</h3>
+            <p class="text-xs text-slate-500">Hasil prediksi muka air per jam periode 01/09/2026 s.d. 07/09/2026</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full">
+              Pasang Max: +2.65 m
+            </span>
+            <span class="text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1 rounded-full">
+              Surut Min: +0.42 m
+            </span>
+          </div>
+        </div>
+        <div class="h-72 w-full">
+          <canvas id="predictionChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- JAVASCRIPT BEHAVIOR FOR PROTOTYPE -->
+  <script>
+    let currentStep = 1;
+    let comparisonChartInstance = null;
+    let predictionChartInstance = null;
+
+    function goToStep(step) {
+      currentStep = step;
+      for (let i = 1; i <= 4; i++) {
+        const content = document.getElementById(`stepContent-${i}`);
+        const btn = document.getElementById(`stepBtn-${i}`);
+        const num = document.getElementById(`stepNum-${i}`);
+
+        if (i === step) {
+          content.classList.remove('hidden');
+          btn.className = 'step-active flex items-center gap-3 p-3.5 rounded-xl transition text-left cursor-pointer';
+          num.className = 'w-8 h-8 rounded-lg bg-white/20 text-white flex items-center justify-center font-bold text-sm';
+        } else if (i < step) {
+          content.classList.add('hidden');
+          btn.className = 'step-done flex items-center gap-3 p-3.5 rounded-xl transition text-left cursor-pointer';
+          num.className = 'w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-sm';
+          num.innerHTML = '<i class="fa-solid fa-check text-xs"></i>';
+        } else {
+          content.classList.add('hidden');
+          btn.className = 'step-idle flex items-center gap-3 p-3.5 rounded-xl transition text-left cursor-pointer';
+          num.className = 'w-8 h-8 rounded-lg bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-sm';
+          num.innerText = i;
+        }
+      }
+
+      if (step === 3) initComparisonChart();
+      if (step === 4) initPredictionChart();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function loadSampleData() {
+      document.getElementById('demoStation').value = 'Stasiun Uji 30 Hari';
+      document.getElementById('demoLat').value = '-6.107800';
+      document.getElementById('demoLon').value = '106.880300';
+      document.getElementById('fileLabel').innerText = 'sample_pasut_1bulan.csv (720 Titik, 18.7 KB)';
+      simulateValidation();
+    }
+
+    function simulateValidation() {
+      const btn = document.getElementById('btnValidate');
+      const text = document.getElementById('btnValidateText');
+      text.innerText = 'Menganalisis file...';
+      btn.disabled = true;
+
+      setTimeout(() => {
+        text.innerText = 'Validasi Ulang';
+        btn.disabled = false;
+
+        document.getElementById('healthBadge').className = 'text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300';
+        document.getElementById('healthBadge').innerHTML = '<i class="fa-solid fa-check-circle mr-1"></i>Layak Analisa';
+
+        document.getElementById('resCount').innerText = '720';
+        document.getElementById('resCountSub').innerHTML = '<span class="text-emerald-600 font-semibold">Lengkap (30 Hari)</span>';
+        
+        document.getElementById('resInterval').innerText = '60 m';
+        document.getElementById('resIntervalSub').innerHTML = '<span class="text-emerald-600 font-semibold">Tepat 1 Jam</span>';
+
+        document.getElementById('resGap').innerText = '0 Gap';
+        document.getElementById('resDup').innerText = '0 Duplikat';
+
+        document.getElementById('resRange').innerText = '01/08/2026 s.d. 30/08/2026';
+        document.getElementById('resMsl').innerText = '1.65 m (Tinggi Acuan Rerata)';
+
+        document.getElementById('statusMessage').innerText = 'Data lolos verifikasi kualitas. Siap dihitung.';
+        document.getElementById('btnStep1Next').disabled = false;
+      }, 500);
+    }
+
+    function simulateCalculation() {
+      const btn = document.getElementById('btnStartCalc');
+      const text = document.getElementById('btnStartCalcText');
+      text.innerText = 'Menghitung Matriks Admiralty...';
+      btn.disabled = true;
+
+      setTimeout(() => {
+        text.innerText = 'Mulai Hitung Admiralty';
+        btn.disabled = false;
+        goToStep(3);
+      }, 700);
+    }
+
+    function initComparisonChart() {
+      if (comparisonChartInstance) return;
+      const ctx = document.getElementById('comparisonChart').getContext('2d');
+      const labels = [];
+      const obs = [];
+      const adm = [];
+
+      for (let h = 0; h < 48; h++) {
+        labels.push(`${h}:00`);
+        const t = h;
+        const valObs = 1.65 + 0.48 * Math.cos((28.98 * t - 42) * Math.PI / 180) + 0.38 * Math.cos((15.04 * t - 115) * Math.PI / 180);
+        const valAdm = 1.65 + 0.47 * Math.cos((28.98 * t - 40) * Math.PI / 180) + 0.37 * Math.cos((15.04 * t - 118) * Math.PI / 180);
+        obs.push(valObs.toFixed(2));
+        adm.push(valAdm.toFixed(2));
+      }
+
+      comparisonChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Observasi Riil',
+              data: obs,
+              borderColor: '#0f172a',
+              borderWidth: 2,
+              pointRadius: 0,
+              tension: 0.35
+            },
+            {
+              label: 'Admiralty Indonesia',
+              data: adm,
+              borderColor: '#0284c7',
+              backgroundColor: 'rgba(2, 132, 199, 0.08)',
+              fill: true,
+              borderWidth: 2,
+              pointRadius: 0,
+              tension: 0.35
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { grid: { color: '#f1f5f9' }, title: { display: true, text: 'Elevasi (meter)' } },
+            x: { grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    function initPredictionChart() {
+      if (predictionChartInstance) return;
+      const ctx = document.getElementById('predictionChart').getContext('2d');
+      const labels = [];
+      const pred = [];
+
+      for (let d = 1; d <= 7; d++) {
+        for (let h = 0; h < 24; h += 3) {
+          labels.push(`H+${d} ${h}:00`);
+          const t = (d - 1) * 24 + h;
+          const val = 1.65 + 0.52 * Math.cos((28.98 * t - 42) * Math.PI / 180) + 0.35 * Math.cos((15.04 * t - 115) * Math.PI / 180);
+          pred.push(val.toFixed(2));
+        }
+      }
+
+      predictionChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Prediksi Elevasi (m)',
+            data: pred,
+            borderColor: '#0284c7',
+            backgroundColor: 'rgba(14, 165, 233, 0.12)',
+            fill: true,
+            borderWidth: 2.5,
+            pointRadius: 2.5,
+            pointBackgroundColor: '#0284c7',
+            tension: 0.4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { grid: { color: '#f1f5f9' }, title: { display: true, text: 'Muka Air (m)' } },
+            x: { grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    function resetPrototype() {
+      document.getElementById('demoStation').value = 'Stasiun Kolono - Kendari';
+      document.getElementById('demoLat').value = '-4.124500';
+      document.getElementById('demoLon').value = '122.682100';
+      document.getElementById('fileLabel').innerText = 'Pilih atau seret berkas pasut ke sini';
+      document.getElementById('healthBadge').className = 'text-xs font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-500 border border-slate-200';
+      document.getElementById('healthBadge').innerText = 'Menunggu Validasi';
+      document.getElementById('resCount').innerText = '-';
+      document.getElementById('resInterval').innerText = '-';
+      document.getElementById('resGap').innerText = '-';
+      document.getElementById('resDup').innerText = '-';
+      document.getElementById('resRange').innerText = '- s.d. -';
+      document.getElementById('resMsl').innerText = '-';
+      document.getElementById('statusMessage').innerText = 'Silakan validasi data terlebih dahulu.';
+      document.getElementById('btnStep1Next').disabled = true;
+      goToStep(1);
+    }
+  </script>
+</body>
+</html>
