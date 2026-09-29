@@ -496,10 +496,16 @@
             <button type="button" onclick="goToStep(2)" class="px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition cursor-pointer">
               <i class="fa-solid fa-arrow-left mr-1"></i>Pilih Model
             </button>
-            <button type="button" onclick="goToStep(4)" class="bg-sky-600 hover:bg-sky-700 text-white font-semibold text-xs px-4 py-2 rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-sm">
-              <span>Buka Generator Prediksi</span>
-              <i class="fa-solid fa-arrow-right"></i>
-            </button>
+            <div class="flex items-center gap-2">
+              <button type="button" id="openOfficialReportModalBtn2" disabled class="bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs px-4 py-2 rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-sm disabled:opacity-50 disabled:cursor-not-allowed" title="Buka Dokumen Laporan Resmi A4 Siap Cetak PDF">
+                <i class="fa-solid fa-file-pdf"></i>
+                <span>Laporan Survei Resmi (A4)</span>
+              </button>
+              <button type="button" onclick="goToStep(4)" class="bg-sky-600 hover:bg-sky-700 text-white font-semibold text-xs px-4 py-2 rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-sm">
+                <span>Buka Generator Prediksi</span>
+                <i class="fa-solid fa-arrow-right"></i>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -523,6 +529,10 @@
             <button type="button" id="exportTidalDatumsCsvButton" disabled class="text-xs font-semibold text-slate-700 hover:text-sky-600 bg-white border border-slate-200 hover:border-sky-300 px-3 py-1.5 rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
               <i class="fa-solid fa-download"></i>
               <span>Download CSV Datums</span>
+            </button>
+            <button type="button" id="openOfficialReportModalBtn" disabled class="text-xs font-semibold text-rose-700 hover:text-white hover:bg-rose-600 bg-rose-50 border border-rose-200 px-3 py-1.5 rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed" title="Buka Dokumen Laporan Resmi A4 Siap Cetak PDF">
+              <i class="fa-solid fa-file-pdf"></i>
+              <span>Laporan Resmi PDF</span>
             </button>
           </div>
         </div>
@@ -1054,8 +1064,8 @@
             <i class="fa-solid fa-arrow-left mr-1.5"></i>Kembali ke Harmonik & Tools
           </button>
           <div class="flex items-center gap-2 flex-wrap">
-            <button type="button" id="exportWorkbookPdfButton" disabled class="px-4 py-2.5 rounded-xl border border-slate-300 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition flex items-center gap-2 cursor-pointer disabled:opacity-50">
-              <i class="fa-solid fa-file-pdf text-rose-500"></i>Cetak Laporan PDF
+            <button type="button" id="exportWorkbookPdfButton" disabled class="px-4 py-2.5 rounded-xl border border-rose-300 bg-rose-50/70 text-xs font-bold text-rose-700 hover:bg-rose-100 transition flex items-center gap-2 cursor-pointer disabled:opacity-50" title="Buka Dokumen Laporan Resmi A4 Siap Cetak PDF">
+              <i class="fa-solid fa-file-pdf text-rose-600"></i>Cetak Laporan PDF Resmi
             </button>
             <button type="button" id="generatePredictionButton" class="bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl transition flex items-center justify-center gap-2 shadow-sm cursor-pointer">
               <i class="fa-solid fa-chart-line"></i>
@@ -1114,7 +1124,121 @@
       <table id="comparisonComponentTable"><thead id="comparisonComponentHead"></thead><tbody id="comparisonComponentBody"></tbody></table>
     </div>
 
-  </main>
+    <!-- ============================================================== -->
+    <!-- MODAL: LAPORAN AKHIR SURVEI PASUT RESMI (OFFICIAL A4 PDF)      -->
+    <!-- ============================================================== -->
+    <div id="officialReportModal" class="fixed inset-0 z-50 overflow-y-auto bg-slate-950/80 backdrop-blur-sm hidden flex items-start justify-center p-2 sm:p-4 md:p-6 transition-all">
+      <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-5xl flex flex-col max-h-[94vh] overflow-hidden my-auto animate-in fade-in duration-200">
+        
+        <!-- Modal Header -->
+        <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between border-b border-slate-800 shrink-0">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-rose-600 to-rose-400 flex items-center justify-center text-white shadow-md">
+              <i class="fa-solid fa-file-invoice text-lg"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-base text-white flex items-center gap-2">
+                <span>Laporan Akhir Survei Pasang Surut Hidrografi</span>
+                <span class="text-[10px] font-semibold uppercase tracking-wider bg-rose-500/30 text-rose-200 px-2 py-0.5 rounded border border-rose-400/30">Official A4 Ready</span>
+              </h3>
+              <p class="text-xs text-slate-400">Standar Pelaporan PT. Eser Geosurvey Indonesia (Hydro-Oceanography Division)</p>
+            </div>
+          </div>
+          <button type="button" id="closeOfficialReportModalBtn" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition cursor-pointer" title="Tutup Modal">
+            <i class="fa-solid fa-xmark text-sm"></i>
+          </button>
+        </div>
+
+        <!-- Parameter Customization Bar -->
+        <div class="bg-slate-50 border-b border-slate-200 p-4 text-xs shrink-0 max-h-56 overflow-y-auto custom-scroll">
+          <details class="cursor-pointer" open>
+            <summary class="font-bold text-slate-800 flex items-center justify-between select-none mb-3">
+              <span class="flex items-center gap-1.5"><i class="fa-solid fa-sliders text-sky-600"></i>Parameter Dokumen Laporan (Sesuaikan Nama, No. Dokumen & Surveyor)</span>
+              <span class="text-[11px] text-sky-600 font-normal">Klik untuk sembunyikan/tampilkan</span>
+            </summary>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 font-sans">
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-600 mb-1">Model / Engine Acuan</label>
+                <select id="reportParamEngine" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white font-semibold text-slate-800 focus:ring-1 focus:ring-sky-500 text-xs"></select>
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-600 mb-1">Nama Perusahaan / Kop</label>
+                <input type="text" id="reportParamCompany" value="PT. ESER GEOSURVEY INDONESIA" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-800 font-semibold focus:ring-1 focus:ring-sky-500 text-xs">
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-600 mb-1">Divisi / Unit Kerja</label>
+                <input type="text" id="reportParamDivision" value="Hydro-Oceanography & Marine Survey Division" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-800 focus:ring-1 focus:ring-sky-500 text-xs">
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-600 mb-1">Nomor Dokumen Laporan</label>
+                <input type="text" id="reportParamDocNo" value="EGI-TIDE-REP/2026/001" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-800 font-mono focus:ring-1 focus:ring-sky-500 text-xs">
+              </div>
+              <div class="sm:col-span-2">
+                <label class="block text-[11px] font-semibold text-slate-600 mb-1">Judul Pekerjaan / Proyek</label>
+                <input type="text" id="reportParamProject" value="SURVEI PENGAMATAN PASANG SURUT & PENENTUAN BIDANG KEDUDUKAN ELEVASI" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-800 focus:ring-1 focus:ring-sky-500 text-xs">
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-600 mb-1">Lokasi / Perairan</label>
+                <input type="text" id="reportParamLocation" value="Perairan Indonesia" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-800 focus:ring-1 focus:ring-sky-500 text-xs">
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-600 mb-1">Pelaksana Survei (Surveyor)</label>
+                <input type="text" id="reportParamSurveyor" value="Surveyor Hidrografi" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-800 focus:ring-1 focus:ring-sky-500 text-xs">
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-600 mb-1">Quality Control (QC)</label>
+                <input type="text" id="reportParamQc" value="QC Hydrographer" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-800 focus:ring-1 focus:ring-sky-500 text-xs">
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-600 mb-1">Disetujui (Team Leader)</label>
+                <input type="text" id="reportParamApprover" value="Chief Hydrographer" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-800 focus:ring-1 focus:ring-sky-500 text-xs">
+              </div>
+              <div class="sm:col-span-2 flex items-center gap-4 pt-4 flex-wrap">
+                <label class="flex items-center gap-1.5 text-[11px] font-semibold text-slate-700 cursor-pointer">
+                  <input type="checkbox" id="reportParamIncludeChart" checked class="w-4 h-4 text-sky-600 rounded">
+                  <span>Lampirkan Grafik Elevasi</span>
+                </label>
+                <label class="flex items-center gap-1.5 text-[11px] font-semibold text-slate-700 cursor-pointer">
+                  <input type="checkbox" id="reportParamIncludeSignatures" checked class="w-4 h-4 text-sky-600 rounded">
+                  <span>Sertakan Lembar Pengesahan</span>
+                </label>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <!-- Action Toolbar -->
+        <div class="px-6 py-2.5 bg-slate-100/90 border-b border-slate-200 flex items-center justify-between flex-wrap gap-2 text-xs shrink-0">
+          <div class="flex items-center gap-2">
+            <span class="text-slate-500 font-medium">Format Output: <strong>A4 Portrait (Standar ISO)</strong></span>
+            <span class="text-slate-300">|</span>
+            <span class="text-emerald-700 bg-emerald-50 border border-emerald-200 font-semibold px-2 py-0.5 rounded text-[11px]">Siap Cetak / Save PDF</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <button type="button" id="refreshOfficialReportBtn" class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition flex items-center gap-1.5 font-semibold cursor-pointer">
+              <i class="fa-solid fa-arrows-rotate"></i>
+              <span>Perbarui Tampilan</span>
+            </button>
+            <button type="button" id="openOfficialReportNewTabBtn" class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition flex items-center gap-1.5 font-semibold cursor-pointer">
+              <i class="fa-solid fa-arrow-up-right-from-square text-sky-600"></i>
+              <span>Buka di Tab Baru</span>
+            </button>
+            <button type="button" id="printOfficialReportBtn" class="px-4 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white transition flex items-center gap-1.5 font-bold shadow-sm cursor-pointer">
+              <i class="fa-solid fa-print"></i>
+              <span>Cetak / Simpan ke PDF</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Live A4 Preview Scrollable Container -->
+        <div class="p-6 bg-slate-200/80 overflow-y-auto custom-scroll flex justify-center items-start flex-1 min-h-[420px]">
+          <div id="officialReportDocumentTarget" class="bg-white shadow-xl rounded-sm p-8 sm:p-10 w-full max-w-[820px] text-slate-900 font-sans transition-all">
+            <!-- Dynamic A4 Report Content Injected Here -->
+          </div>
+        </div>
+
+      </div>
+    </div>
 
   <!-- JAVASCRIPT LOGIC -->
   <script>
@@ -1145,6 +1269,28 @@
     const generatePredictionButton = document.getElementById('generatePredictionButton');
     const exportWorkbookPdfButton = document.getElementById('exportWorkbookPdfButton');
     const exportComparisonCsvButton = document.getElementById('exportComparisonCsvButton');
+
+    // Official Report Modal Elements
+    const openOfficialReportModalBtn = document.getElementById('openOfficialReportModalBtn');
+    const openOfficialReportModalBtn2 = document.getElementById('openOfficialReportModalBtn2');
+    const officialReportModal = document.getElementById('officialReportModal');
+    const closeOfficialReportModalBtn = document.getElementById('closeOfficialReportModalBtn');
+    const refreshOfficialReportBtn = document.getElementById('refreshOfficialReportBtn');
+    const openOfficialReportNewTabBtn = document.getElementById('openOfficialReportNewTabBtn');
+    const printOfficialReportBtn = document.getElementById('printOfficialReportBtn');
+    const officialReportDocumentTarget = document.getElementById('officialReportDocumentTarget');
+
+    const reportParamEngine = document.getElementById('reportParamEngine');
+    const reportParamCompany = document.getElementById('reportParamCompany');
+    const reportParamDivision = document.getElementById('reportParamDivision');
+    const reportParamDocNo = document.getElementById('reportParamDocNo');
+    const reportParamProject = document.getElementById('reportParamProject');
+    const reportParamLocation = document.getElementById('reportParamLocation');
+    const reportParamSurveyor = document.getElementById('reportParamSurveyor');
+    const reportParamQc = document.getElementById('reportParamQc');
+    const reportParamApprover = document.getElementById('reportParamApprover');
+    const reportParamIncludeChart = document.getElementById('reportParamIncludeChart');
+    const reportParamIncludeSignatures = document.getElementById('reportParamIncludeSignatures');
 
     // Adjustment DOM elements
     const indonesiaAdjustmentCard = document.getElementById('indonesiaAdjustmentCard');
@@ -1832,6 +1978,9 @@
 
       const exportBtn = document.getElementById('exportTidalDatumsCsvButton');
       if(exportBtn) exportBtn.disabled = false;
+      if(openOfficialReportModalBtn) openOfficialReportModalBtn.disabled = false;
+      if(openOfficialReportModalBtn2) openOfficialReportModalBtn2.disabled = false;
+      if(exportWorkbookPdfButton) exportWorkbookPdfButton.disabled = false;
 
       // Ensure valid selected model
       const validModelNames = latestCalculationResults.map(r => (r.summary && r.summary.model_name) || '');
@@ -3237,10 +3386,872 @@
       });
     }
 
-    // EXPORT PDF
-    if(exportWorkbookPdfButton){
-      exportWorkbookPdfButton.addEventListener('click', function(){
+    // ==============================================================
+    // ONE-CLICK OFFICIAL HYDROGRAPHIC SURVEY REPORT GENERATOR (PDF / A4)
+    // ==============================================================
+    const TIDAL_CONSTITUENT_INFO = {
+      M2:  { name: 'M2',  speed: '28.9841°/j', period: '12.42 jam', desc: 'Semi-diurnal Utama Bulan (Principal Lunar)' },
+      S2:  { name: 'S2',  speed: '30.0000°/j', period: '12.00 jam', desc: 'Semi-diurnal Utama Matahari (Principal Solar)' },
+      N2:  { name: 'N2',  speed: '28.4397°/j', period: '12.66 jam', desc: 'Semi-diurnal Eliptis Bulan (Larger Lunar Elliptic)' },
+      K2:  { name: 'K2',  speed: '30.0821°/j', period: '11.97 jam', desc: 'Semi-diurnal Deklinasi Luni-Solar' },
+      K1:  { name: 'K1',  speed: '15.0411°/j', period: '23.93 jam', desc: 'Diurnal Deklinasi Luni-Solar (Solis-Lunar)' },
+      O1:  { name: 'O1',  speed: '13.9430°/j', period: '25.82 jam', desc: 'Diurnal Utama Bulan (Principal Lunar Diurnal)' },
+      P1:  { name: 'P1',  speed: '14.9589°/j', period: '24.07 jam', desc: 'Diurnal Utama Matahari (Principal Solar Diurnal)' },
+      M4:  { name: 'M4',  speed: '57.9682°/j', period: '6.21 jam',  desc: 'Dangkal Kuarter-diurnal Bulan (Shallow Water)' },
+      MS4: { name: 'MS4', speed: '58.9841°/j', period: '6.10 jam',  desc: 'Dangkal Kuarter-diurnal Luni-Solar' }
+    };
+
+    function getReportData(targetEngine){
+      if(!Array.isArray(latestCalculationResults) || !latestCalculationResults.length) return null;
+      const res = latestCalculationResults.find(r => r.summary && r.summary.model_name === targetEngine) || latestCalculationResults[0];
+      if(!res) return null;
+
+      const sm = res.summary || {};
+      const rm = res.run_meta || {};
+      const components = Array.isArray(res.component_targets) ? res.component_targets : ((res.comparison_chart && res.comparison_chart.adjustment_basis && res.comparison_chart.adjustment_basis.components) ? res.comparison_chart.adjustment_basis.components : []);
+      const adjBasis = (res.comparison_chart && res.comparison_chart.adjustment_basis) ? res.comparison_chart.adjustment_basis : null;
+      const offset = (adjBasis && typeof adjBasis.offset === 'number') ? adjBasis.offset : num(sm.msl, 0);
+      const state = getAdjustmentStateForModel(sm.model_name);
+
+      const orig = computeDatumsFromComponents(offset, components, null);
+      const calib = computeDatumsFromComponents(offset, components, state);
+
+      // Formzahl calculation
+      const m2 = calib.amps.M2 || 0;
+      const s2 = calib.amps.S2 || 0;
+      const k1 = calib.amps.K1 || 0;
+      const o1 = calib.amps.O1 || 0;
+      const formzahl = (m2 + s2) > 0 ? ((k1 + o1) / (m2 + s2)) : 0;
+
+      let tideType = 'Pasang Surut Harian Ganda (Semidiurnal)';
+      let tideDesc = 'Terjadi 2 kali pasang dan 2 kali surut dalam sehari dengan ketinggian yang relatif sama (F ≤ 0.25).';
+      if(formzahl <= 0.25){
+        tideType = 'Pasang Surut Harian Ganda (Semidiurnal)';
+        tideDesc = 'Terjadi 2 kali air pasang dan 2 kali air surut dalam 24 jam dengan tinggi yang hampir sama (F ≤ 0.25).';
+      } else if(formzahl <= 1.50){
+        tideType = 'Campuran Condong Harian Ganda (Mixed Prevailing Semidiurnal)';
+        tideDesc = 'Terjadi 2 kali pasang dan 2 kali surut dalam sehari dengan tinggi dan interval yang berbeda (0.25 < F ≤ 1.50).';
+      } else if(formzahl <= 3.00){
+        tideType = 'Campuran Condong Harian Tunggal (Mixed Prevailing Diurnal)';
+        tideDesc = 'Umumnya terjadi 1 kali pasang dan 1 kali surut per hari, namun kadang-kadang terjadi 2 kali (1.50 < F ≤ 3.00).';
+      } else {
+        tideType = 'Pasang Surut Harian Tunggal (Diurnal)';
+        tideDesc = 'Hanya terjadi 1 kali pasang dan 1 kali surut penuh dalam satu hari pengamatan 24 jam (F > 3.00).';
+      }
+
+      // Format components table data
+      const compRows = Object.keys(TIDAL_CONSTITUENT_INFO).map(code => {
+        const info = TIDAL_CONSTITUENT_INFO[code];
+        const origAmp = orig.amps[code] || 0;
+        const calibAmp = calib.amps[code] || 0;
+
+        let origPhase = 0;
+        let calibPhase = 0;
+        if(Array.isArray(components)){
+          const c = components.find(x => String(x.name||'').trim().toUpperCase() === code);
+          if(c){
+            origPhase = num(c.phase, 0);
+            calibPhase = origPhase + (state ? num(state.phaseDegrees, 0) : 0);
+            if(code === 'P1' && state) calibPhase += num(state.p1PhaseDegrees, 0);
+            calibPhase = ((calibPhase % 360) + 360) % 360;
+          }
+        }
+
+        return {
+          code,
+          speed: info.speed,
+          period: info.period,
+          desc: info.desc,
+          origAmp,
+          calibAmp,
+          origPhase,
+          calibPhase
+        };
+      });
+
+      return {
+        res, sm, rm,
+        offset,
+        state,
+        orig, calib,
+        formzahl,
+        tideType, tideDesc,
+        compRows
+      };
+    }
+
+    function buildOfficialReportHtml(mode = 'preview'){
+      const engine = reportParamEngine ? reportParamEngine.value : (latestCalculationResults[0]?.summary?.model_name || 'admiralty_indonesia');
+      const data = getReportData(engine);
+      if(!data) return '<div class="p-6 text-center text-slate-400">Data hasil perhitungan belum tersedia.</div>';
+
+      const companyName = (reportParamCompany && reportParamCompany.value.trim()) || 'PT. ESER GEOSURVEY INDONESIA';
+      const divisionName = (reportParamDivision && reportParamDivision.value.trim()) || 'Hydro-Oceanography & Marine Survey Division';
+      const docNo = (reportParamDocNo && reportParamDocNo.value.trim()) || 'EGI-TIDE-REP/2026/001';
+      const projectTitle = (reportParamProject && reportParamProject.value.trim()) || 'SURVEI PENGAMATAN PASANG SURUT & PENENTUAN BIDANG KEDUDUKAN ELEVASI';
+      const location = (reportParamLocation && reportParamLocation.value.trim()) || 'Perairan Indonesia';
+      const stationName = (stationNameField && stationNameField.value.trim()) || data.sm.station_name || 'Stasiun Pasut';
+      const lat = (latitudeField && latitudeField.value.trim()) || data.sm.latitude || '-';
+      const lon = (longitudeField && longitudeField.value.trim()) || data.sm.longitude || '-';
+      const timezone = (timezoneField && timezoneField.value.trim()) || data.sm.timezone || 'WIB (UTC+7)';
+      const surveyor = (reportParamSurveyor && reportParamSurveyor.value.trim()) || 'Surveyor Hidrografi';
+      const qc = (reportParamQc && reportParamQc.value.trim()) || 'QC Hydrographer';
+      const approver = (reportParamApprover && reportParamApprover.value.trim()) || 'Chief Hydrographer / Team Leader';
+      const includeChart = reportParamIncludeChart ? reportParamIncludeChart.checked : true;
+      const includeSignatures = reportParamIncludeSignatures ? reportParamIncludeSignatures.checked : true;
+
+      // Ensure chart has drawn target engine if needed
+      let chartImgBase64 = '';
+      if(includeChart && datumChartInstance){
+        try {
+          chartImgBase64 = datumChartInstance.toBase64Image('image/png', 1.0);
+        } catch(e){
+          console.warn('Gagal render chart to base64 image:', e);
+        }
+      }
+
+      const todayStr = new Date().toLocaleDateString('id-ID', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      });
+
+      // Assemble HTML content
+      const bodyContent = `
+        <div class="official-report-sheet">
+          
+          <!-- KOP SURAT RESMI (LETTERHEAD) -->
+          <div class="report-header">
+            <div class="header-left">
+              <div class="company-brand">${esc(companyName)}</div>
+              <div class="division-title">${esc(divisionName)}</div>
+              <div class="company-desc">Marine Geophysical, Hydro-Oceanographic, Bathymetric & Coastal Engineering Survey</div>
+            </div>
+            <div class="header-right">
+              <table class="meta-doc-table">
+                <tr><td>No. Dokumen</td><td>:</td><td><strong>${esc(docNo)}</strong></td></tr>
+                <tr><td>Revisi</td><td>:</td><td>00 (Final Release)</td></tr>
+                <tr><td>Tanggal</td><td>:</td><td>${todayStr}</td></tr>
+              </table>
+            </div>
+          </div>
+
+          <!-- DOUBLE LINE ACCENT -->
+          <div class="header-separator"></div>
+
+          <!-- DOCUMENT TITLE -->
+          <div class="report-title-box">
+            <h1 class="main-title">LAPORAN AKHIR ANALISIS PASANG SURUT HIDROGRAFI</h1>
+            <div class="sub-title">PENENTUAN 11 DATUM ELEVASI VERTIKAL & 9 KONSTANTA HARMONIK (ADMIRALTY 29 PIANTAN)</div>
+            <div class="project-tag">PROYEK: ${esc(projectTitle)}</div>
+          </div>
+
+          <!-- SECTION 1: METADATA STASIUN & STATISTIK OBSERVASI -->
+          <div class="section-title"><span class="sec-num">1.</span> DATA STASIUN & STATISTIK PENGAMATAN</div>
+          <div class="grid-2-col">
+            <table class="report-table info-table">
+              <tr><th colspan="2" class="table-subhead">Informasi Posisi Stasiun</th></tr>
+              <tr><td class="lbl">Nama Stasiun</td><td><strong>${esc(stationName)}</strong></td></tr>
+              <tr><td class="lbl">Lokasi / Perairan</td><td>${esc(location)}</td></tr>
+              <tr><td class="lbl">Koordinat Geografis</td><td><span class="mono">${esc(lat)}, ${esc(lon)}</span></td></tr>
+              <tr><td class="lbl">Zona Waktu Stasiun</td><td>${esc(timezone)}</td></tr>
+              <tr><td class="lbl">Model Perhitungan</td><td><strong>${esc(data.sm.model_label || data.sm.model_name)}</strong></td></tr>
+            </table>
+
+            <table class="report-table info-table">
+              <tr><th colspan="2" class="table-subhead">Statistik & Tipe Pasut (Formzahl)</th></tr>
+              <tr><td class="lbl">Durasi & Sampel</td><td>${data.sm.duration_days || 29} Hari / 29 Piantan (${data.sm.data_count || '-'} Data Titik)</td></tr>
+              <tr><td class="lbl">Muka Air Rerata (MSL / S0)</td><td><strong class="highlight-val">${data.calib.msl.toFixed(3)} m</strong> (Datum Acuan 0.00 m)</td></tr>
+              <tr><td class="lbl">Muka Air Tertinggi (Max)</td><td><strong>${(data.sm.max_elevation ? Number(data.sm.max_elevation).toFixed(3) : '-')} m</strong> (Elevasi Riil)</td></tr>
+              <tr><td class="lbl">Muka Air Terendah (Min)</td><td><strong>${(data.sm.min_elevation ? Number(data.sm.min_elevation).toFixed(3) : '-')} m</strong> (Elevasi Riil)</td></tr>
+              <tr><td class="lbl">Tunggang Pengamatan</td><td><strong>${(data.sm.tidal_range ? Number(data.sm.tidal_range).toFixed(3) : '-')} m</strong></td></tr>
+              <tr><td class="lbl">Bilangan Formzahl (F)</td><td><strong class="highlight-val">F = ${data.formzahl.toFixed(2)}</strong></td></tr>
+            </table>
+          </div>
+
+          <!-- TIPE PASUT BANNER -->
+          <div class="tide-classification-box">
+            <strong>Klasifikasi Tipe Pasut:</strong> <span class="tide-type-name">${esc(data.tideType)}</span>
+            <div class="tide-type-desc">${esc(data.tideDesc)}</div>
+          </div>
+
+          <!-- SECTION 2: 9 KONSTANTA HARMONIK UTAMA -->
+          <div class="section-title"><span class="sec-num">2.</span> 9 KONSTANTA HARMONIK UTAMA (ADMIRALTY 29 PIANTAN / DISHIDROS TNI AL)</div>
+          <table class="report-table data-table">
+            <thead>
+              <tr>
+                <th style="width: 32px;">No</th>
+                <th style="width: 70px;">Konstanta</th>
+                <th style="width: 80px;">Kecepatan (ω)</th>
+                <th style="width: 75px;">Periode (T)</th>
+                <th style="width: 85px;">Amplitudo (m)</th>
+                <th style="width: 75px;">Amplitudo (cm)</th>
+                <th style="width: 75px;">Fase (g°)</th>
+                <th>Deskripsi Fenomena Astronomis & Hidrografi</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="highlight-row">
+                <td class="center">-</td>
+                <td><strong>S0 (MSL)</strong></td>
+                <td class="center">-</td>
+                <td class="center">-</td>
+                <td class="right font-bold">${data.calib.msl.toFixed(4)}</td>
+                <td class="right">${(data.calib.msl * 100).toFixed(1)}</td>
+                <td class="center">-</td>
+                <td>Muka Air Laut Rata-rata (Mean Sea Level) - Datum Referensi Vertikal</td>
+              </tr>
+              ${data.compRows.map((c, i) => `
+                <tr>
+                  <td class="center">${i + 1}</td>
+                  <td><strong class="comp-name">${esc(c.code)}</strong></td>
+                  <td class="center mono">${esc(c.speed)}</td>
+                  <td class="center mono">${esc(c.period)}</td>
+                  <td class="right mono font-bold">${c.calibAmp.toFixed(4)}</td>
+                  <td class="right mono">${(c.calibAmp * 100).toFixed(2)}</td>
+                  <td class="center mono font-bold">${c.calibPhase.toFixed(2)}°</td>
+                  <td class="desc-col">${esc(c.desc)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+
+          <!-- SECTION 3: 11 ELEVASI MUKA AIR PENTING (VERTICAL TIDAL DATUMS) -->
+          <div class="section-title"><span class="sec-num">3.</span> KEDUDUKAN 11 DATUM ELEVASI VERTIKAL (TIDAL DATUMS) & TUNGGANG PASUT</div>
+          <div class="grid-table-range">
+            <table class="report-table data-table">
+              <thead>
+                <tr>
+                  <th style="width: 30px;">No</th>
+                  <th style="width: 60px;">Datum</th>
+                  <th>Definisi Hidrografi & Nama Internasional</th>
+                  <th style="width: 150px;">Formula Harmonik</th>
+                  <th style="width: 85px;">Elevasi (m)</th>
+                  <th style="width: 85px;">Relatif MSL</th>
+                  <th style="width: 85px;">Di Atas LAT</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${TIDAL_DATUM_SPECS.map((spec, i) => {
+                  const val = data.calib[spec.key];
+                  const diffMsl = val - data.calib.msl;
+                  const aboveLat = val - data.calib.lat;
+                  const signMsl = diffMsl > 0.0001 ? '+' : '';
+                  const isMsl = spec.code === 'MSL';
+                  const isLat = spec.code === 'LAT';
+                  const isHat = spec.code === 'HAT';
+                  const rowClass = isMsl ? 'row-msl' : (isLat ? 'row-lat' : (isHat ? 'row-hat' : ''));
+
+                  return `
+                    <tr class="${rowClass}">
+                      <td class="center">${i + 1}</td>
+                      <td><span class="datum-badge datum-${spec.code}">${esc(spec.code)}</span></td>
+                      <td>
+                        <strong>${esc(spec.desc)}</strong>
+                        <div class="datum-intl-name">${esc(spec.name)}</div>
+                      </td>
+                      <td class="mono formula-cell">${esc(spec.formula)}</td>
+                      <td class="right mono datum-val font-bold">${val.toFixed(3)} m</td>
+                      <td class="right mono">${isMsl ? '0.000 m' : `${signMsl}${diffMsl.toFixed(3)} m`}</td>
+                      <td class="right mono font-bold">${isLat ? '0.000 m' : `${aboveLat.toFixed(3)} m`}</td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+
+            <!-- TIDAL RANGE SUMMARY TILES -->
+            <div class="range-summary-grid">
+              <div class="range-tile">
+                <div class="range-label">Tunggang Purnama (Spring Range)</div>
+                <div class="range-formula font-mono">2 × (M2 + S2)</div>
+                <div class="range-val">${data.calib.springRange.toFixed(3)} m</div>
+              </div>
+              <div class="range-tile">
+                <div class="range-label">Tunggang Perbani (Neap Range)</div>
+                <div class="range-formula font-mono">2 × |M2 - S2|</div>
+                <div class="range-val">${data.calib.neapRange.toFixed(3)} m</div>
+              </div>
+              <div class="range-tile">
+                <div class="range-label">Tunggang Rerata (Mean Range)</div>
+                <div class="range-formula font-mono">2 × M2</div>
+                <div class="range-val">${data.calib.meanRange.toFixed(3)} m</div>
+              </div>
+              <div class="range-tile range-tile-accent">
+                <div class="range-label">Tunggang Maks. Astronomis</div>
+                <div class="range-formula font-mono">HAT - LAT</div>
+                <div class="range-val">${data.calib.maxRange.toFixed(3)} m</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECTION 4: LAMPIRAN VISUAL GRAFIK ELEVASI PASUT -->
+          ${includeChart && chartImgBase64 ? `
+            <div class="page-break"></div>
+            <div class="section-title"><span class="sec-num">4.</span> LAMPIRAN GRAFIK ELEVASI PASANG SURUT & 11 GARIS DATUM VERTIKAL</div>
+            <div class="chart-attachment-box avoid-break">
+              <img src="${chartImgBase64}" alt="Grafik Elevasi Pasut dan 11 Datum Vertikal" class="report-chart-img" />
+              <div class="chart-caption">
+                <strong>Gambar 1.</strong> Profil Elevasi Muka Air Pasang Surut Observasi dan Kedudukan 11 Bidang Datum Vertikal Selama Periode 29 Piantan (${esc(stationName)}).
+              </div>
+            </div>
+          ` : ''}
+
+          <!-- SECTION 5: LEMBAR PENGESAHAN (SIGNATURE BLOCK) -->
+          ${includeSignatures ? `
+            <div class="signatures-wrapper avoid-break">
+              <div class="section-title" style="margin-top: 14px;"><span class="sec-num">${includeChart && chartImgBase64 ? '5.' : '4.'}</span> LEMBAR PENGESAHAN HASIL SURVEI & PENGOLAHAN</div>
+              <div class="signature-grid">
+                
+                <div class="signature-box">
+                  <div class="sig-role">Disusun Oleh:</div>
+                  <div class="sig-job">Surveyor Hidrografi</div>
+                  <div class="sig-line"></div>
+                  <div class="sig-name"><strong>${esc(surveyor)}</strong></div>
+                  <div class="sig-meta">Tanggal: ${todayStr}</div>
+                </div>
+
+                <div class="signature-box">
+                  <div class="sig-role">Diperiksa Oleh:</div>
+                  <div class="sig-job">Quality Control Hydrographer</div>
+                  <div class="sig-line"></div>
+                  <div class="sig-name"><strong>${esc(qc)}</strong></div>
+                  <div class="sig-meta">Tanggal: ${todayStr}</div>
+                </div>
+
+                <div class="signature-box">
+                  <div class="sig-role">Disetujui Oleh:</div>
+                  <div class="sig-job">Chief Hydrographer / Team Leader</div>
+                  <div class="sig-line"></div>
+                  <div class="sig-name"><strong>${esc(approver)}</strong></div>
+                  <div class="sig-meta">Tanggal: ${todayStr}</div>
+                </div>
+
+              </div>
+              <div class="report-footer-note">
+                Dokumen ini merupakan laporan teknis resmi hasil analisis data pasang surut menggunakan metode Admiralty 29 Piantan terkalibrasi. Seluruh data elevasi mengacu pada sistem ketinggian vertikal hidro-oseanografi standar IHO / Dishidros TNI AL.
+              </div>
+            </div>
+          ` : ''}
+
+        </div>
+      `;
+
+      // Full Standalone Document for Print / New Tab
+      const styles = `
+        <style>
+          * { box-sizing: border-box; }
+          body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: #0f172a;
+            margin: 0;
+            padding: 0;
+            background: #f8fafc;
+            font-size: 11px;
+            line-height: 1.4;
+          }
+          .official-report-sheet {
+            background: #ffffff;
+            width: 100%;
+            max-width: 820px;
+            margin: 0 auto;
+            padding: 24px 30px;
+          }
+          .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 20px;
+          }
+          .company-brand {
+            font-size: 17px;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: 0.5px;
+            line-height: 1.2;
+          }
+          .division-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: #0284c7;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 2px;
+          }
+          .company-desc {
+            font-size: 9px;
+            color: #64748b;
+            margin-top: 2px;
+          }
+          .meta-doc-table {
+            font-size: 10px;
+            border-collapse: collapse;
+          }
+          .meta-doc-table td {
+            padding: 1.5px 4px;
+            white-space: nowrap;
+          }
+          .header-separator {
+            height: 3px;
+            border-top: 2px solid #0f172a;
+            border-bottom: 1px solid #0284c7;
+            margin: 10px 0 14px 0;
+          }
+          .report-title-box {
+            text-align: center;
+            margin-bottom: 14px;
+          }
+          .main-title {
+            font-size: 14px;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: 0.5px;
+            margin: 0 0 2px 0;
+          }
+          .sub-title {
+            font-size: 10px;
+            font-weight: 700;
+            color: #475569;
+            margin: 0 0 4px 0;
+          }
+          .project-tag {
+            display: inline-block;
+            font-size: 9.5px;
+            font-weight: 700;
+            color: #0284c7;
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            padding: 2px 8px;
+            border-radius: 4px;
+          }
+          .section-title {
+            font-size: 11px;
+            font-weight: 800;
+            color: #0f172a;
+            border-bottom: 1.5px solid #0f172a;
+            padding-bottom: 3px;
+            margin: 12px 0 7px 0;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+          }
+          .sec-num {
+            color: #0284c7;
+            margin-right: 2px;
+          }
+          .grid-2-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 8px;
+          }
+          .report-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 10px;
+          }
+          .report-table th, .report-table td {
+            border: 1px solid #cbd5e1;
+            padding: 4px 6px;
+          }
+          .report-table th {
+            background-color: #f1f5f9;
+            color: #334155;
+            font-weight: 700;
+            text-align: left;
+          }
+          .table-subhead {
+            background-color: #e2e8f0 !important;
+            font-size: 10.5px;
+            text-transform: uppercase;
+          }
+          .info-table td.lbl {
+            font-weight: 600;
+            color: #475569;
+            width: 44%;
+            background: #f8fafc;
+          }
+          .highlight-val {
+            color: #0284c7;
+            font-family: monospace;
+          }
+          .tide-classification-box {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-left: 4px solid #16a34a;
+            padding: 6px 10px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            font-size: 10px;
+          }
+          .tide-type-name {
+            font-weight: 800;
+            color: #15803d;
+            font-size: 11px;
+          }
+          .tide-type-desc {
+            color: #475569;
+            font-size: 9.5px;
+            margin-top: 1px;
+          }
+          .data-table th {
+            text-align: center;
+            font-size: 9.5px;
+            text-transform: uppercase;
+            background: #f8fafc;
+          }
+          .comp-name {
+            color: #0284c7;
+            font-size: 10.5px;
+            font-family: monospace;
+          }
+          .desc-col {
+            font-size: 9px;
+            color: #64748b;
+          }
+          .highlight-row {
+            background-color: #f8fafc;
+          }
+          .datum-badge {
+            display: inline-block;
+            font-size: 9px;
+            font-weight: 800;
+            padding: 1px 4px;
+            border-radius: 3px;
+            border: 1px solid #cbd5e1;
+            font-family: monospace;
+          }
+          .datum-HAT  { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
+          .datum-HHWL { background: #ffedd5; color: #c2410c; border-color: #fed7aa; }
+          .datum-MHWS { background: #fef3c7; color: #b45309; border-color: #fde68a; }
+          .datum-MHWL { background: #e0f2fe; color: #0369a1; border-color: #bae6fd; }
+          .datum-MHWN { background: #fef9c3; color: #a16207; border-color: #fef08a; }
+          .datum-MSL  { background: #f1f5f9; color: #0f172a; border-color: #cbd5e1; font-weight: 900; }
+          .datum-MLWN { background: #ccfbf1; color: #0f766e; border-color: #99f6e4; }
+          .datum-MLWL { background: #dbeafe; color: #1d4ed8; border-color: #bfdbfe; }
+          .datum-MLWS { background: #ede9fe; color: #6d28d9; border-color: #ddd6fe; }
+          .datum-LLWL { background: #fae8ff; color: #a21caf; border-color: #f5d0fe; }
+          .datum-LAT  { background: #e0e7ff; color: #4338ca; border-color: #c7d2fe; }
+          .row-msl td { background-color: #f8fafc; font-weight: bold; }
+          .row-lat td { background-color: #eef2ff; }
+          .row-hat td { background-color: #fef2f2; }
+          .datum-intl-name {
+            font-size: 8.5px;
+            color: #64748b;
+          }
+          .formula-cell {
+            font-size: 9px;
+            color: #475569;
+          }
+          .grid-table-range {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+          }
+          .range-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+            margin-top: 4px;
+          }
+          .range-tile {
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            padding: 5px 8px;
+            text-align: center;
+          }
+          .range-tile-accent {
+            background: #f0fdf4;
+            border-color: #86efac;
+          }
+          .range-label {
+            font-size: 9px;
+            font-weight: 700;
+            color: #475569;
+          }
+          .range-formula {
+            font-size: 8px;
+            color: #64748b;
+          }
+          .range-val {
+            font-size: 13px;
+            font-weight: 800;
+            color: #0f172a;
+            font-family: monospace;
+            margin-top: 2px;
+          }
+          .chart-attachment-box {
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            padding: 8px;
+            background: #ffffff;
+            margin-top: 6px;
+          }
+          .report-chart-img {
+            width: 100%;
+            height: auto;
+            display: block;
+            border: 1px solid #e2e8f0;
+            border-radius: 3px;
+          }
+          .chart-caption {
+            font-size: 9px;
+            color: #475569;
+            margin-top: 6px;
+            text-align: center;
+          }
+          .signatures-wrapper {
+            margin-top: 14px;
+          }
+          .signature-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 8px;
+          }
+          .signature-box {
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            padding: 10px 12px;
+            text-align: center;
+            background: #fdfdfd;
+          }
+          .sig-role {
+            font-size: 9.5px;
+            color: #64748b;
+          }
+          .sig-job {
+            font-size: 10.5px;
+            font-weight: 700;
+            color: #0f172a;
+          }
+          .sig-line {
+            height: 48px;
+            border-bottom: 1px solid #94a3b8;
+            margin-bottom: 6px;
+          }
+          .sig-name {
+            font-size: 11px;
+            color: #0f172a;
+          }
+          .sig-meta {
+            font-size: 9px;
+            color: #64748b;
+            margin-top: 2px;
+          }
+          .report-footer-note {
+            font-size: 8.5px;
+            color: #64748b;
+            font-style: italic;
+            text-align: justify;
+            margin-top: 10px;
+            padding-top: 6px;
+            border-top: 1px dashed #cbd5e1;
+          }
+          .center { text-align: center; }
+          .right { text-align: right; }
+          .mono { font-family: monospace; }
+          .font-bold { font-weight: bold; }
+
+          @media print {
+            body {
+              background: #ffffff !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+            .no-print { display: none !important; }
+            .official-report-sheet {
+              max-width: 100% !important;
+              padding: 0 !important;
+              box-shadow: none !important;
+            }
+            .page-break { page-break-before: always; }
+            .avoid-break { page-break-inside: avoid; }
+          }
+          @page {
+            size: A4 portrait;
+            margin: 12mm 14mm 12mm 14mm;
+          }
+        </style>
+      `;
+
+      if(mode === 'preview'){
+        return styles + bodyContent;
+      }
+
+      if(mode === 'newtab'){
+        return `<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <title>Laporan Akhir Survei Pasut - ${esc(stationName)}</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  ${styles}
+  <style>
+    .top-toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: #0f172a;
+      color: #fff;
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    }
+    .print-btn {
+      background: #e11d48;
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .print-btn:hover { background: #be123c; }
+  </style>
+</head>
+<body>
+  <div class="top-toolbar no-print">
+    <div style="font-size: 13px; font-weight: bold;">
+      <i class="fa-solid fa-file-invoice" style="margin-right: 6px; color: #fb7185;"></i>
+      Laporan Survei Pasut Hidrografi: ${esc(stationName)}
+    </div>
+    <div style="display:flex; gap:10px;">
+      <button type="button" onclick="window.print()" class="print-btn"><i class="fa-solid fa-print"></i> Cetak / Simpan ke PDF</button>
+      <button type="button" onclick="window.close()" style="background:#334155; color:#fff; border:none; padding:8px 14px; border-radius:6px; font-size:12px; cursor:pointer;">Tutup</button>
+    </div>
+  </div>
+  <div style="padding: 20px 0;">
+    ${bodyContent}
+  </div>
+</body>
+</html>`;
+      }
+
+      // Standalone for popup window print
+      return `<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <title>Laporan Akhir Survei Pasut - ${esc(stationName)}</title>
+  ${styles}
+</head>
+<body>
+  ${bodyContent}
+  <script>
+    window.onload = function(){
+      setTimeout(function(){
+        window.focus();
         window.print();
+      }, 500);
+    };
+  <\/script>
+</body>
+</html>`;
+    }
+
+    function updateOfficialReportPreview(){
+      if(!officialReportDocumentTarget) return;
+      officialReportDocumentTarget.innerHTML = buildOfficialReportHtml('preview');
+    }
+
+    function openOfficialReportModal(){
+      if(!Array.isArray(latestCalculationResults) || !latestCalculationResults.length){
+        window.alert('Hasil perhitungan belum tersedia. Silakan jalankan perhitungan model pada Tahap 2 terlebih dahulu.');
+        return;
+      }
+
+      // Populate engine select options
+      if(reportParamEngine){
+        reportParamEngine.innerHTML = latestCalculationResults.map(r => {
+          const mName = (r.summary && r.summary.model_name) || '';
+          const mLabel = (r.summary && r.summary.model_label) || mName;
+          return `<option value="${esc(mName)}">${esc(mLabel)}</option>`;
+        }).join('');
+        if(datumChartActiveEngine){
+          reportParamEngine.value = datumChartActiveEngine;
+        }
+      }
+
+      // Pre-fill location/station if possible
+      const primary = latestCalculationResults[0];
+      const sm = primary.summary || {};
+      if(stationNameField && stationNameField.value && reportParamProject){
+        // keep project
+      }
+
+      // Ensure datum chart is drawn so image is available
+      renderDatumElevationChart(reportParamEngine ? reportParamEngine.value : datumChartActiveEngine);
+
+      // Render preview
+      updateOfficialReportPreview();
+
+      // Show modal
+      if(officialReportModal){
+        officialReportModal.classList.remove('hidden');
+      }
+    }
+
+    function closeOfficialReportModal(){
+      if(officialReportModal){
+        officialReportModal.classList.add('hidden');
+      }
+    }
+
+    function printOfficialReport(){
+      const html = buildOfficialReportHtml('print');
+      const printWindow = window.open('', '_blank', 'width=950,height=800,scrollbars=yes');
+      if(!printWindow){
+        window.alert('Popup browser diblokir. Harap izinkan popup pada browser Anda untuk mencetak laporan.');
+        return;
+      }
+      printWindow.document.open();
+      printWindow.document.write(html);
+      printWindow.document.close();
+    }
+
+    function openOfficialReportNewTab(){
+      const html = buildOfficialReportHtml('newtab');
+      const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+    }
+
+    // Bind Report Listeners
+    if(openOfficialReportModalBtn) openOfficialReportModalBtn.addEventListener('click', openOfficialReportModal);
+    if(openOfficialReportModalBtn2) openOfficialReportModalBtn2.addEventListener('click', openOfficialReportModal);
+    if(exportWorkbookPdfButton) exportWorkbookPdfButton.addEventListener('click', openOfficialReportModal);
+    if(closeOfficialReportModalBtn) closeOfficialReportModalBtn.addEventListener('click', closeOfficialReportModal);
+    if(refreshOfficialReportBtn) refreshOfficialReportBtn.addEventListener('click', updateOfficialReportPreview);
+    if(printOfficialReportBtn) printOfficialReportBtn.addEventListener('click', printOfficialReport);
+    if(openOfficialReportNewTabBtn) openOfficialReportNewTabBtn.addEventListener('click', openOfficialReportNewTab);
+
+    if(reportParamEngine){
+      reportParamEngine.addEventListener('change', function(e){
+        renderDatumElevationChart(e.target.value);
+        updateOfficialReportPreview();
+      });
+    }
+    [reportParamCompany, reportParamDivision, reportParamDocNo, reportParamProject, reportParamLocation, reportParamSurveyor, reportParamQc, reportParamApprover].forEach(input => {
+      if(input) input.addEventListener('input', updateOfficialReportPreview);
+    });
+    [reportParamIncludeChart, reportParamIncludeSignatures].forEach(chk => {
+      if(chk) chk.addEventListener('change', updateOfficialReportPreview);
+    });
+
+    // Close modal on click outside sheet
+    if(officialReportModal){
+      officialReportModal.addEventListener('click', function(e){
+        if(e.target === officialReportModal){
+          closeOfficialReportModal();
+        }
       });
     }
 
