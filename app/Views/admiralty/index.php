@@ -351,17 +351,17 @@
           </span>
         </div>
 
-        <!-- Model Cards Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <!-- Model 1 -->
+        <!-- Model Cards Grid (2 Model Admiralty + 1 Least Square) -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <!-- Model 1: Admiralty Indonesia -->
           <label class="relative flex flex-col justify-between p-5 rounded-2xl border-2 border-sky-500 bg-sky-50/40 cursor-pointer hover:bg-sky-50 transition">
             <div>
               <div class="flex items-center justify-between mb-3">
-                <span class="text-xs font-bold px-2 py-0.5 rounded-md bg-sky-600 text-white">Rekomendasi</span>
+                <span class="text-xs font-bold px-2 py-0.5 rounded-md bg-sky-600 text-white">Rekomendasi Dishidros</span>
                 <input type="checkbox" value="admiralty_indonesia" checked class="model-checkbox w-5 h-5 rounded text-sky-600 focus:ring-sky-500">
               </div>
               <h4 class="font-bold text-slate-900 text-base mb-1">Admiralty Indonesia</h4>
-              <p class="text-xs text-slate-600 leading-relaxed">Standar baku Dishidros TNI AL, menghasilkan 9 konstanta harmonik utama dengan tabel Form 20.</p>
+              <p class="text-xs text-slate-600 leading-relaxed">Standar baku Dishidros TNI AL, menghasilkan 9 konstanta harmonik utama dengan tabel Form 20 (Engine Native PHP).</p>
             </div>
             <div class="text-[11px] font-semibold text-sky-700 mt-4 pt-3 border-t border-sky-200 flex items-center justify-between">
               <span>9 Komponen + Formzahl</span>
@@ -369,37 +369,22 @@
             </div>
           </label>
 
-          <!-- Model 2 -->
-          <label class="relative flex flex-col justify-between p-5 rounded-2xl border border-slate-200 bg-white cursor-pointer hover:bg-slate-50 transition">
-            <div>
-              <div class="flex items-center justify-between mb-3">
-                <span class="text-xs font-medium px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">Klasik</span>
-                <input type="checkbox" value="admiralty_hidros" checked class="model-checkbox w-5 h-5 rounded text-sky-600 focus:ring-sky-500">
-              </div>
-              <h4 class="font-bold text-slate-900 text-base mb-1">Admiralty Hidros</h4>
-              <p class="text-xs text-slate-600 leading-relaxed">Formulasi matriks 29 piantan hidrografi untuk validasi manual survei batimetri laut.</p>
-            </div>
-            <div class="text-[11px] font-semibold text-slate-600 mt-4 pt-3 border-t border-slate-100">
-              Matriks Piantan Hidros
-            </div>
-          </label>
-
-          <!-- Model 3 -->
+          <!-- Model 2: Admiralty Cat A -->
           <label class="relative flex flex-col justify-between p-5 rounded-2xl border border-slate-200 bg-white cursor-pointer hover:bg-slate-50 transition">
             <div>
               <div class="flex items-center justify-between mb-3">
                 <span class="text-xs font-medium px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">IHO Cat A</span>
-                <input type="checkbox" value="admiralty_cat_a" class="model-checkbox w-5 h-5 rounded text-sky-600 focus:ring-sky-500">
+                <input type="checkbox" value="admiralty_cat_a" checked class="model-checkbox w-5 h-5 rounded text-sky-600 focus:ring-sky-500">
               </div>
               <h4 class="font-bold text-slate-900 text-base mb-1">Admiralty Cat A</h4>
-              <p class="text-xs text-slate-600 leading-relaxed">Penyelarasan parameter referensi standar hidrografi internasional (Cat A).</p>
+              <p class="text-xs text-slate-600 leading-relaxed">Penyelarasan parameter referensi standar hidrografi internasional (Cat A) via Fourier harmonik kontinu.</p>
             </div>
             <div class="text-[11px] font-semibold text-slate-600 mt-4 pt-3 border-t border-slate-100">
               Standar Organisasi Hidrografi
             </div>
           </label>
 
-          <!-- Model 4 -->
+          <!-- Model 3: Least Square -->
           <label class="relative flex flex-col justify-between p-5 rounded-2xl border border-slate-200 bg-white cursor-pointer hover:bg-slate-50 transition">
             <div>
               <div class="flex items-center justify-between mb-3">
@@ -407,7 +392,7 @@
                 <input type="checkbox" value="least_square" checked class="model-checkbox w-5 h-5 rounded text-sky-600 focus:ring-sky-500">
               </div>
               <h4 class="font-bold text-slate-900 text-base mb-1">Least Square</h4>
-              <p class="text-xs text-slate-600 leading-relaxed">Pencocokan kuadrat terkecil langsung dari kurva observasi untuk kontrol RMSE.</p>
+              <p class="text-xs text-slate-600 leading-relaxed">Pencocokan kuadrat terkecil langsung dari kurva observasi untuk kontrol RMSE optimal.</p>
             </div>
             <div class="text-[11px] font-semibold text-slate-600 mt-4 pt-3 border-t border-slate-100">
               Evaluasi Error Minimum
@@ -684,8 +669,8 @@
           </div>
         </div>
 
-        <!-- 4 Model Adjustment Cards Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- 3 Model Adjustment Cards Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
 
           <!-- 1. Admiralty Indonesia Adjustment -->
           <div class="adjustment-card bg-slate-50/70 border border-slate-200 rounded-2xl p-4 flex flex-col justify-between gap-3" id="indonesiaAdjustmentCard" data-model-name="admiralty_indonesia" style="display:none;">
@@ -743,64 +728,6 @@
               </div>
             </div>
             <div id="indonesiaCalibrationInfo" class="text-[11px] font-medium text-slate-600 bg-emerald-50/90 border border-emerald-200/80 rounded-lg p-2.5 flex items-center justify-between" style="display:none;"></div>
-          </div>
-
-          <!-- 2. Admiralty Hidros Adjustment -->
-          <div class="adjustment-card bg-slate-50/70 border border-slate-200 rounded-2xl p-4 flex flex-col justify-between gap-3" id="hidrosAdjustmentCard" data-model-name="admiralty_hidros" style="display:none;">
-            <div class="flex items-center justify-between border-b border-slate-200/60 pb-2">
-              <div class="flex items-center gap-2">
-                <span class="w-2.5 h-2.5 rounded-full bg-amber-600"></span>
-                <strong class="text-xs font-bold text-slate-800">Adjustment Admiralty Hidros</strong>
-              </div>
-              <div class="flex items-center gap-1.5">
-                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800" id="hidrosAdjustmentStatus">Aktif</span>
-                <button type="button" class="text-xs font-semibold text-amber-700 hover:text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-200/80 px-2 py-0.5 rounded-lg transition flex items-center gap-1 cursor-pointer" id="autoCalibrateHidrosButton" title="Auto-Kalibrasi ke Data Observasi">
-                  <i class="fa-solid fa-wand-magic-sparkles text-[10px]"></i>Auto
-                </button>
-                <button type="button" class="text-xs text-slate-500 hover:text-rose-600 transition px-1" id="resetHidrosAdjustmentButton" title="Reset Nilai"><i class="fa-solid fa-rotate-left mr-0.5"></i>Reset</button>
-              </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-2.5 text-xs">
-              <div>
-                <div class="flex justify-between text-[11px] font-semibold mb-1">
-                  <span class="text-slate-600">Amplitudo</span>
-                  <span class="text-amber-700 font-mono" id="hidrosAmplitudeAdjustValue">0%</span>
-                </div>
-                <input type="range" min="-100" max="100" step="1" value="0" id="hidrosAmplitudeAdjust" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-amber-600">
-              </div>
-              <div>
-                <div class="flex justify-between text-[11px] font-semibold mb-1">
-                  <span class="text-slate-600">Fase</span>
-                  <span class="text-amber-700 font-mono" id="hidrosPhaseAdjustValue">0°</span>
-                </div>
-                <input type="range" min="-180" max="180" step="1" value="0" id="hidrosPhaseAdjust" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-amber-600">
-              </div>
-              <div>
-                <div class="flex justify-between text-[11px] font-semibold mb-1">
-                  <span class="text-slate-600">P1 (Amplitudo)</span>
-                  <span class="text-amber-700 font-mono" id="hidrosP1AmplitudeAdjustValue">0%</span>
-                </div>
-                <input type="range" min="-100" max="100" step="1" value="0" id="hidrosP1AmplitudeAdjust" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-amber-600">
-              </div>
-              <div>
-                <div class="flex justify-between text-[11px] font-semibold mb-1">
-                  <span class="text-slate-600">P1 (Fase)</span>
-                  <span class="text-amber-700 font-mono" id="hidrosP1PhaseAdjustValue">0°</span>
-                </div>
-                <input type="range" min="-180" max="180" step="1" value="0" id="hidrosP1PhaseAdjust" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-amber-600">
-              </div>
-            </div>
-
-            <div class="pt-2 border-t border-slate-200/60 flex items-center justify-between text-xs">
-              <span class="text-[11px] text-slate-500 font-medium">Shift Waktu:</span>
-              <div class="flex items-center gap-1.5">
-                <button type="button" class="w-6 h-6 rounded-md border border-slate-300 text-slate-700 hover:bg-slate-200 flex items-center justify-center font-bold text-xs cursor-pointer" id="hidrosTimeShiftMinus">-</button>
-                <span class="px-2 py-0.5 rounded bg-white border border-slate-200 font-mono font-bold text-slate-800 text-xs" id="hidrosTimeShiftValue">0 jam</span>
-                <button type="button" class="w-6 h-6 rounded-md border border-slate-300 text-slate-700 hover:bg-slate-200 flex items-center justify-center font-bold text-xs cursor-pointer" id="hidrosTimeShiftPlus">+</button>
-              </div>
-            </div>
-            <div id="hidrosCalibrationInfo" class="text-[11px] font-medium text-slate-600 bg-emerald-50/90 border border-emerald-200/80 rounded-lg p-2.5 flex items-center justify-between" style="display:none;"></div>
           </div>
 
           <!-- 3. Admiralty Cat A Adjustment -->
@@ -1182,21 +1109,6 @@
     const indonesiaTimeShiftValue = document.getElementById('indonesiaTimeShiftValue');
     const resetIndonesiaAdjustmentButton = document.getElementById('resetIndonesiaAdjustmentButton');
 
-    const hidrosAdjustmentCard = document.getElementById('hidrosAdjustmentCard');
-    const hidrosAdjustmentStatus = document.getElementById('hidrosAdjustmentStatus');
-    const hidrosAmplitudeAdjust = document.getElementById('hidrosAmplitudeAdjust');
-    const hidrosAmplitudeAdjustValue = document.getElementById('hidrosAmplitudeAdjustValue');
-    const hidrosPhaseAdjust = document.getElementById('hidrosPhaseAdjust');
-    const hidrosPhaseAdjustValue = document.getElementById('hidrosPhaseAdjustValue');
-    const hidrosP1AmplitudeAdjust = document.getElementById('hidrosP1AmplitudeAdjust');
-    const hidrosP1AmplitudeAdjustValue = document.getElementById('hidrosP1AmplitudeAdjustValue');
-    const hidrosP1PhaseAdjust = document.getElementById('hidrosP1PhaseAdjust');
-    const hidrosP1PhaseAdjustValue = document.getElementById('hidrosP1PhaseAdjustValue');
-    const hidrosTimeShiftMinus = document.getElementById('hidrosTimeShiftMinus');
-    const hidrosTimeShiftPlus = document.getElementById('hidrosTimeShiftPlus');
-    const hidrosTimeShiftValue = document.getElementById('hidrosTimeShiftValue');
-    const resetHidrosAdjustmentButton = document.getElementById('resetHidrosAdjustmentButton');
-
     const catAAdjustmentCard = document.getElementById('catAAdjustmentCard');
     const catAAdjustmentStatus = document.getElementById('catAAdjustmentStatus');
     const catAAmplitudeAdjust = document.getElementById('catAAmplitudeAdjust');
@@ -1230,23 +1142,19 @@
     // Auto-Calibration DOM elements
     const autoCalibrateAllButton = document.getElementById('autoCalibrateAllButton');
     const autoCalibrateIndonesiaButton = document.getElementById('autoCalibrateIndonesiaButton');
-    const autoCalibrateHidrosButton = document.getElementById('autoCalibrateHidrosButton');
     const autoCalibrateCatAButton = document.getElementById('autoCalibrateCatAButton');
     const autoCalibrateLeastSquareButton = document.getElementById('autoCalibrateLeastSquareButton');
 
     const indonesiaCalibrationInfo = document.getElementById('indonesiaCalibrationInfo');
-    const hidrosCalibrationInfo = document.getElementById('hidrosCalibrationInfo');
     const catACalibrationInfo = document.getElementById('catACalibrationInfo');
     const leastSquareCalibrationInfo = document.getElementById('leastSquareCalibrationInfo');
 
     // Adjustment states
     let indonesiaAdjustmentState = { amplitudePercent:0, phaseDegrees:0, p1AmplitudePercent:0, p1PhaseDegrees:0, timeShiftHours:0 };
-    let hidrosAdjustmentState = { amplitudePercent:0, phaseDegrees:0, p1AmplitudePercent:0, p1PhaseDegrees:0, timeShiftHours:0 };
     let catAAdjustmentState = { amplitudePercent:0, phaseDegrees:0, p1AmplitudePercent:0, p1PhaseDegrees:0, timeShiftHours:0 };
     let leastSquareAdjustmentState = { amplitudePercent:0, phaseDegrees:0, p1AmplitudePercent:0, p1PhaseDegrees:0, timeShiftHours:0 };
 
     let latestIndonesiaAdjustmentBasis = null;
-    let latestHidrosAdjustmentBasis = null;
     let latestCatAAdjustmentBasis = null;
     let latestLeastSquareAdjustmentBasis = null;
 
@@ -1382,7 +1290,6 @@
       setHtml('qualityReasons', 'Status kualitas dataset akan muncul setelah validasi.');
       calculationEligibility.textContent = 'Lakukan validasi data terlebih dahulu.';
       resetIndonesiaAdjustmentState();
-      resetHidrosAdjustmentState();
       resetCatAAdjustmentState();
       resetLeastSquareAdjustmentState();
       goToStep(1);
@@ -1588,7 +1495,6 @@
 
     function syncAdjustmentCardAvailability(){
       toggleAdjustmentCard(indonesiaAdjustmentCard, isModelSelected('admiralty_indonesia') && !!latestIndonesiaAdjustmentBasis, indonesiaAdjustmentStatus);
-      toggleAdjustmentCard(hidrosAdjustmentCard, isModelSelected('admiralty_hidros') && !!latestHidrosAdjustmentBasis, hidrosAdjustmentStatus);
       toggleAdjustmentCard(catAAdjustmentCard, isModelSelected('admiralty_cat_a') && !!latestCatAAdjustmentBasis, catAAdjustmentStatus);
       toggleAdjustmentCard(leastSquareAdjustmentCard, isModelSelected('least_square') && !!latestLeastSquareAdjustmentBasis, leastSquareAdjustmentStatus);
     }
@@ -1610,24 +1516,6 @@
       indonesiaAdjustmentState = { amplitudePercent:0, phaseDegrees:0, p1AmplitudePercent:0, p1PhaseDegrees:0, timeShiftHours:0 };
       syncIndonesiaAdjustmentUi();
       if(indonesiaCalibrationInfo) indonesiaCalibrationInfo.style.display = 'none';
-    }
-
-    function syncHidrosAdjustmentUi(){
-      if(hidrosAmplitudeAdjust) hidrosAmplitudeAdjust.value = String(hidrosAdjustmentState.amplitudePercent);
-      if(hidrosPhaseAdjust) hidrosPhaseAdjust.value = String(hidrosAdjustmentState.phaseDegrees);
-      if(hidrosP1AmplitudeAdjust) hidrosP1AmplitudeAdjust.value = String(hidrosAdjustmentState.p1AmplitudePercent);
-      if(hidrosP1PhaseAdjust) hidrosP1PhaseAdjust.value = String(hidrosAdjustmentState.p1PhaseDegrees);
-
-      if(hidrosAmplitudeAdjustValue) hidrosAmplitudeAdjustValue.textContent = (hidrosAdjustmentState.amplitudePercent > 0 ? '+' : '') + hidrosAdjustmentState.amplitudePercent + '%';
-      if(hidrosPhaseAdjustValue) hidrosPhaseAdjustValue.textContent = (hidrosAdjustmentState.phaseDegrees > 0 ? '+' : '') + hidrosAdjustmentState.phaseDegrees + '°';
-      if(hidrosP1AmplitudeAdjustValue) hidrosP1AmplitudeAdjustValue.textContent = (hidrosAdjustmentState.p1AmplitudePercent > 0 ? '+' : '') + hidrosAdjustmentState.p1AmplitudePercent + '%';
-      if(hidrosP1PhaseAdjustValue) hidrosP1PhaseAdjustValue.textContent = (hidrosAdjustmentState.p1PhaseDegrees > 0 ? '+' : '') + hidrosAdjustmentState.p1PhaseDegrees + '°';
-      if(hidrosTimeShiftValue) hidrosTimeShiftValue.textContent = (hidrosAdjustmentState.timeShiftHours > 0 ? '+' : '') + hidrosAdjustmentState.timeShiftHours + ' jam';
-    }
-    function resetHidrosAdjustmentState(){
-      hidrosAdjustmentState = { amplitudePercent:0, phaseDegrees:0, p1AmplitudePercent:0, p1PhaseDegrees:0, timeShiftHours:0 };
-      syncHidrosAdjustmentUi();
-      if(hidrosCalibrationInfo) hidrosCalibrationInfo.style.display = 'none';
     }
 
     function syncCatAAdjustmentUi(){
@@ -1695,7 +1583,6 @@
     }
 
     function buildAdjustedIndonesiaSeries(){ return buildAdjustedSeriesFromBasis(latestIndonesiaAdjustmentBasis, indonesiaAdjustmentState); }
-    function buildAdjustedHidrosSeries(){ return buildAdjustedSeriesFromBasis(latestHidrosAdjustmentBasis, hidrosAdjustmentState); }
     function buildAdjustedCatASeries(){ return buildAdjustedSeriesFromBasis(latestCatAAdjustmentBasis, catAAdjustmentState); }
     function buildAdjustedLeastSquareSeries(){ return buildAdjustedSeriesFromBasis(latestLeastSquareAdjustmentBasis, leastSquareAdjustmentState); }
 
@@ -1723,7 +1610,6 @@
         });
       }
       pushRows('Admiralty Indonesia', latestIndonesiaAdjustmentBasis, indonesiaAdjustmentState);
-      pushRows('Admiralty Hidros', latestHidrosAdjustmentBasis, hidrosAdjustmentState);
       pushRows('Admiralty Cat A', latestCatAAdjustmentBasis, catAAdjustmentState);
       pushRows('Least Square', latestLeastSquareAdjustmentBasis, leastSquareAdjustmentState);
       setHtml('adjustedConstantsBody', rows.length ? rows.join('') : '<tr><td colspan="7" class="p-3 text-center text-slate-400 font-sans">Adjustment konstanta harmonik akan muncul di sini.</td></tr>');
@@ -1811,7 +1697,6 @@
 
     function getAdjustmentStateForModel(modelName){
       if(modelName === 'admiralty_indonesia') return indonesiaAdjustmentState;
-      if(modelName === 'admiralty_hidros') return hidrosAdjustmentState;
       if(modelName === 'admiralty_cat_a') return catAAdjustmentState;
       if(modelName === 'least_square') return leastSquareAdjustmentState;
       return null;
@@ -2187,8 +2072,6 @@
       comparisonChartInstance.data.datasets.forEach(dataset => {
         if(dataset.model_name === 'admiralty_indonesia' && latestIndonesiaAdjustmentBasis){
           dataset.data = buildAdjustedIndonesiaSeries() || dataset.data;
-        } else if(dataset.model_name === 'admiralty_hidros' && latestHidrosAdjustmentBasis){
-          dataset.data = buildAdjustedHidrosSeries() || dataset.data;
         } else if(dataset.model_name === 'admiralty_cat_a' && latestCatAAdjustmentBasis){
           dataset.data = buildAdjustedCatASeries() || dataset.data;
         } else if(dataset.model_name === 'least_square' && latestLeastSquareAdjustmentBasis){
@@ -2250,12 +2133,6 @@
         syncUi = syncIndonesiaAdjustmentUi;
         infoEl = indonesiaCalibrationInfo;
         modelLabel = 'Admiralty Indonesia';
-      } else if(modelName === 'admiralty_hidros'){
-        basis = latestHidrosAdjustmentBasis;
-        state = hidrosAdjustmentState;
-        syncUi = syncHidrosAdjustmentUi;
-        infoEl = hidrosCalibrationInfo;
-        modelLabel = 'Admiralty Hidros';
       } else if(modelName === 'admiralty_cat_a'){
         basis = latestCatAAdjustmentBasis;
         state = catAAdjustmentState;
@@ -2454,7 +2331,6 @@
       let calibratedCount = 0;
       const cards = [
         { name: 'admiralty_indonesia', card: indonesiaAdjustmentCard },
-        { name: 'admiralty_hidros', card: hidrosAdjustmentCard },
         { name: 'admiralty_cat_a', card: catAAdjustmentCard },
         { name: 'least_square', card: leastSquareAdjustmentCard }
       ];
@@ -2490,15 +2366,6 @@
       if(indonesiaTimeShiftPlus) indonesiaTimeShiftPlus.addEventListener('click', function(){ indonesiaAdjustmentState.timeShiftHours += 1; syncIndonesiaAdjustmentUi(); rerenderAdjustment(); });
       if(resetIndonesiaAdjustmentButton) resetIndonesiaAdjustmentButton.addEventListener('click', function(){ resetIndonesiaAdjustmentState(); rerenderAdjustment(); });
 
-      // Hidros
-      if(hidrosAmplitudeAdjust) hidrosAmplitudeAdjust.addEventListener('input', function(){ hidrosAdjustmentState.amplitudePercent = num(this.value, 0); syncHidrosAdjustmentUi(); rerenderAdjustment(); });
-      if(hidrosPhaseAdjust) hidrosPhaseAdjust.addEventListener('input', function(){ hidrosAdjustmentState.phaseDegrees = num(this.value, 0); syncHidrosAdjustmentUi(); rerenderAdjustment(); });
-      if(hidrosP1AmplitudeAdjust) hidrosP1AmplitudeAdjust.addEventListener('input', function(){ hidrosAdjustmentState.p1AmplitudePercent = num(this.value, 0); syncHidrosAdjustmentUi(); rerenderAdjustment(); });
-      if(hidrosP1PhaseAdjust) hidrosP1PhaseAdjust.addEventListener('input', function(){ hidrosAdjustmentState.p1PhaseDegrees = num(this.value, 0); syncHidrosAdjustmentUi(); rerenderAdjustment(); });
-      if(hidrosTimeShiftMinus) hidrosTimeShiftMinus.addEventListener('click', function(){ hidrosAdjustmentState.timeShiftHours -= 1; syncHidrosAdjustmentUi(); rerenderAdjustment(); });
-      if(hidrosTimeShiftPlus) hidrosTimeShiftPlus.addEventListener('click', function(){ hidrosAdjustmentState.timeShiftHours += 1; syncHidrosAdjustmentUi(); rerenderAdjustment(); });
-      if(resetHidrosAdjustmentButton) resetHidrosAdjustmentButton.addEventListener('click', function(){ resetHidrosAdjustmentState(); rerenderAdjustment(); });
-
       // Cat A
       if(catAAmplitudeAdjust) catAAmplitudeAdjust.addEventListener('input', function(){ catAAdjustmentState.amplitudePercent = num(this.value, 0); syncCatAAdjustmentUi(); rerenderAdjustment(); });
       if(catAPhaseAdjust) catAPhaseAdjust.addEventListener('input', function(){ catAAdjustmentState.phaseDegrees = num(this.value, 0); syncCatAAdjustmentUi(); rerenderAdjustment(); });
@@ -2519,7 +2386,6 @@
 
       // Auto-Calibration Listeners
       if(autoCalibrateIndonesiaButton) autoCalibrateIndonesiaButton.addEventListener('click', function(){ runAutoCalibrationForModel('admiralty_indonesia'); });
-      if(autoCalibrateHidrosButton) autoCalibrateHidrosButton.addEventListener('click', function(){ runAutoCalibrationForModel('admiralty_hidros'); });
       if(autoCalibrateCatAButton) autoCalibrateCatAButton.addEventListener('click', function(){ runAutoCalibrationForModel('admiralty_cat_a'); });
       if(autoCalibrateLeastSquareButton) autoCalibrateLeastSquareButton.addEventListener('click', function(){ runAutoCalibrationForModel('least_square'); });
       if(autoCalibrateAllButton) autoCalibrateAllButton.addEventListener('click', runAutoCalibrationForAllModels);
@@ -2667,7 +2533,6 @@
 
       // Show adjustment cards
       if(indonesiaAdjustmentCard) indonesiaAdjustmentCard.style.display = 'flex';
-      if(hidrosAdjustmentCard) hidrosAdjustmentCard.style.display = 'flex';
       if(catAAdjustmentCard) catAAdjustmentCard.style.display = 'flex';
       if(leastSquareAdjustmentCard) leastSquareAdjustmentCard.style.display = 'flex';
 
@@ -2688,7 +2553,6 @@
       // Model series with live adjustment
       const colors = {
         admiralty_indonesia: { border:'#0f766e', bg:'rgba(15,118,110,0.1)' },
-        admiralty_hidros: { border:'#d97706', bg:'rgba(217,119,6,0.1)' },
         admiralty_cat_a: { border:'#b91c1c', bg:'rgba(185,28,28,0.1)' },
         least_square: { border:'#2563eb', bg:'rgba(37,99,235,0.1)' }
       };
@@ -2699,7 +2563,6 @@
         const modelName = sm.model_name || '';
 
         if(modelName === 'admiralty_indonesia' && c.adjustment_basis) latestIndonesiaAdjustmentBasis = c.adjustment_basis;
-        if(modelName === 'admiralty_hidros' && c.adjustment_basis) latestHidrosAdjustmentBasis = c.adjustment_basis;
         if(modelName === 'admiralty_cat_a' && c.adjustment_basis) latestCatAAdjustmentBasis = c.adjustment_basis;
         if(modelName === 'least_square' && c.adjustment_basis) latestLeastSquareAdjustmentBasis = c.adjustment_basis;
 
@@ -2709,7 +2572,6 @@
             let pts = s.points || [];
 
             if(s.model_name === 'admiralty_indonesia' && latestIndonesiaAdjustmentBasis) pts = buildAdjustedIndonesiaSeries() || s.points;
-            if(s.model_name === 'admiralty_hidros' && latestHidrosAdjustmentBasis) pts = buildAdjustedHidrosSeries() || s.points;
             if(s.model_name === 'admiralty_cat_a' && latestCatAAdjustmentBasis) pts = buildAdjustedCatASeries() || s.points;
             if(s.model_name === 'least_square' && latestLeastSquareAdjustmentBasis) pts = buildAdjustedLeastSquareSeries() || s.points;
 
@@ -2887,7 +2749,6 @@
       const modelName = ((selectedResult || {}).summary || {}).model_name || '';
       if(modelName === 'admiralty_indonesia') return indonesiaAdjustmentState;
       if(modelName === 'admiralty_cat_a') return catAAdjustmentState;
-      if(modelName === 'admiralty_hidros') return hidrosAdjustmentState;
       if(modelName === 'least_square') return leastSquareAdjustmentState;
       return { amplitudePercent:0, phaseDegrees:0, p1AmplitudePercent:0, p1PhaseDegrees:0, timeShiftHours:0 };
     }

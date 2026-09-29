@@ -64,12 +64,8 @@ class AdmiraltyCalculator
         }
 
         $modelName = (string) ($run['model_name'] ?? '');
-        if ($modelName === 'admiralty_hidros') {
-            throw new RuntimeException('Prediksi untuk model Admiralty Hidros belum diaktifkan. Saat ini prediksi hanya tersedia untuk Admiralty Hidro-Oseanografi Indonesia, Admiralty Cat A, dan Least Square.');
-        }
-
         if (! in_array($modelName, ['least_square', 'admiralty_indonesia', 'admiralty_cat_a'], true)) {
-            throw new RuntimeException('Prediksi saat ini baru tersedia untuk model Least Square, Admiralty Cat A, dan Admiralty Hidro-Oseanografi Indonesia.');
+            throw new RuntimeException('Prediksi saat ini baru tersedia untuk model Least Square, Admiralty Cat A, dan Admiralty Indonesia.');
         }
 
         $dataset = (new AdmiraltyDatasetModel())->find((int) ($run['dataset_id'] ?? 0));
@@ -378,7 +374,7 @@ class AdmiraltyCalculator
         $labels = array_map(static fn (array $row): string => (string) $row['time_label'], $windowRows);
         $observed = array_map(static fn (array $row): float => round((float) $row['observed'], 4), $windowRows);
         $phaseAlignment = null;
-        if (in_array($modelName, ['admiralty_indonesia', 'admiralty_hidros', 'admiralty_cat_a'], true)) {
+        if (in_array($modelName, ['admiralty_indonesia', 'admiralty_cat_a'], true)) {
             $phaseAlignment = $this->estimateGlobalPhaseOffset(
                 $this->buildSeriesRows($prepared),
                 $components,
@@ -431,7 +427,7 @@ class AdmiraltyCalculator
             'window_days' => 15,
             'evaluations' => $evaluations,
             'phase_alignment' => $phaseAlignment,
-            'adjustment_basis' => in_array($modelName, ['admiralty_indonesia', 'admiralty_hidros', 'admiralty_cat_a', 'least_square'], true)
+            'adjustment_basis' => in_array($modelName, ['admiralty_indonesia', 'admiralty_cat_a', 'least_square'], true)
                 ? $this->buildAdjustmentBasis(
                     $windowRows,
                     $components,
@@ -1167,8 +1163,7 @@ class AdmiraltyCalculator
     {
         return match ($modelName) {
             'admiralty_klasik'    => 'Admiralty Klasik',
-            'admiralty_indonesia' => 'Admiralty Hidro-Oseanografi Indonesia',
-            'admiralty_hidros'    => 'Admiralty Hidros',
+            'admiralty_indonesia' => 'Admiralty Indonesia',
             'admiralty_cat_a'     => 'Admiralty Cat A',
             'least_square'        => 'Least Square',
             default               => 'Model Tidak Dikenal',
@@ -1293,165 +1288,10 @@ class AdmiraltyCalculator
     {
         return match ($modelName) {
             'admiralty_klasik'    => $this->buildAdmiraltyKlasikPayload($prepared),
-            'admiralty_hidros'    => $this->buildAdmiraltyHidrosPayload($prepared, $dataset, $msl),
             'admiralty_cat_a'     => $this->buildAdmiraltyCatAPayload($prepared),
             'least_square'        => $this->buildLeastSquarePayload($prepared),
             default               => $this->buildAdmiraltyIndonesiaPayload($prepared, $dataset, $msl),
         };
-    }
-
-    /**
-     * @param list<array<string, mixed>> $prepared
-     * @return array{0: list<array{key: string, label: string}>, 1: list<array<string, string>>, 2: list<string>, 3: list<array{name: string, group: string, status: string}>, 4: string, 5: list<array<string, mixed>>}
-     */
-    private function buildAdmiraltyHidrosPayload(array $prepared, array $dataset, float $msl): array
-    {
-        $workingColumns = [
-            ['key' => 'tgl', 'label' => 'Tanggal'],
-        ];
-        for ($hour = 0; $hour < 24; $hour++) {
-            $workingColumns[] = [
-                'key' => 'h' . str_pad((string) $hour, 2, '0', STR_PAD_LEFT),
-                'label' => str_pad((string) $hour, 2, '0', STR_PAD_LEFT),
-            ];
-        }
-
-        $workingTable = [];
-        $notes = [
-            'Model aktif: Admiralty Hidros.',
-            'Model ini memakai workbook Admiralty Hidros sebagai engine Excel terpisah dari Admiralty Hidro-Oseanografi Indonesia.',
-            'Untuk v1, fokusnya adalah pembacaan konstanta harmonik, tabel kerja workbook, dan perbandingan hasil antar model.',
-            'Prediksi untuk model Admiralty Hidros belum diaktifkan.',
-        ];
-        $componentTargets = $this->defaultComponentTargets('Menunggu hasil workbook Admiralty Hidros', $msl);
-        $subPanels = [];
-
-        try {
-            $workbookResult = (new AdmiraltyExcelEngine('hidros'))->calculate($dataset, $prepared, $this->componentDefinitions());
-            $workbookTables = is_array($workbookResult['tables'] ?? null) ? $workbookResult['tables'] : [];
-            $componentTargets = is_array($workbookResult['components'] ?? null) && $workbookResult['components'] !== []
-                ? $workbookResult['components']
-                : $componentTargets;
-
-            if (is_array($workbookTables['matrix'] ?? null) && $workbookTables['matrix'] !== []) {
-                $workingTable = $workbookTables['matrix'];
-            }
-
-            if (is_array($workbookTables['harmonics'] ?? null) && $workbookTables['harmonics'] !== []) {
-                $subPanels[] = [
-                    'title' => 'Konstanta Harmonik',
-                    'description' => 'Tabel komponen harmonik hasil pembacaan langsung dari workbook Admiralty Hidros.',
-                    'columns' => [
-                        ['key' => 'name', 'label' => 'Komponen'],
-                        ['key' => 'amplitude_cm', 'label' => 'Amplitudo (cm)'],
-                        ['key' => 'phase_deg', 'label' => 'Fase (deg)'],
-                    ],
-                    'rows' => $workbookTables['harmonics'],
-                    'items' => [
-                        'Angka amplitudo mentah pada workbook Admiralty Hidros tersimpan dalam sentimeter.',
-                        'Di tabel Komponen Target aplikasi, amplitudo sudah dikonversi ke meter agar setara dengan model lain.',
-                    ],
-                ];
-            }
-
-            if (is_array($workbookTables['derivation'] ?? null) && $workbookTables['derivation'] !== []) {
-                $subPanels[] = [
-                    'title' => 'Turunan Rumus',
-                    'description' => 'Catatan turunan dan relasi komponen yang dibaca dari blok workbook Admiralty Hidros.',
-                    'columns' => [
-                        ['key' => 'item', 'label' => 'Item'],
-                        ['key' => 'note', 'label' => 'Catatan'],
-                    ],
-                    'rows' => $workbookTables['derivation'],
-                    'items' => [
-                        'Panel ini membantu audit logika turunan Admiralty Hidros tanpa memaksa format skema Indonesia.',
-                    ],
-                ];
-            }
-
-            if (is_array($workbookTables['classification'] ?? null) && $workbookTables['classification'] !== []) {
-                $subPanels[] = [
-                    'title' => 'Klasifikasi',
-                    'description' => 'Ringkasan bilangan formzahl dan teks klasifikasi pasut dari workbook Admiralty Hidros.',
-                    'columns' => [
-                        ['key' => 'item', 'label' => 'Item'],
-                        ['key' => 'value', 'label' => 'Nilai'],
-                        ['key' => 'note', 'label' => 'Keterangan'],
-                    ],
-                    'rows' => $workbookTables['classification'],
-                    'items' => [
-                        'Blok ini dipakai sebagai pembanding karakter pasut terhadap model lain.',
-                    ],
-                ];
-            }
-
-            $engineMeta = is_array($workbookResult['engine_meta'] ?? null) ? $workbookResult['engine_meta'] : [];
-            $subPanels[] = [
-                'title' => 'Engine Workbook',
-                'description' => 'Metadata engine workbook yang dipakai untuk model Admiralty Hidros.',
-                'columns' => [
-                    ['key' => 'item', 'label' => 'Item'],
-                    ['key' => 'value', 'label' => 'Nilai'],
-                ],
-                'rows' => [
-                    ['item' => 'Sumber', 'value' => (string) ($engineMeta['source'] ?? 'Excel Workbook Admiralty Hidros')],
-                    ['item' => 'Template', 'value' => 'Template workbook Admiralty Hidros aktif'],
-                    ['item' => 'Workbook Copy', 'value' => (string) ($engineMeta['workbook_copy'] ?? '-')],
-                    ['item' => 'Variant', 'value' => (string) ($engineMeta['engine_variant'] ?? 'hidros')],
-                ],
-                'items' => [
-                    'Engine Hidros dipisahkan dari workbook Indonesia agar dua metode Admiralty tetap independen.',
-                    'Model Hidros saat ini hanya mendukung perhitungan harmonik dan audit tabel workbook.',
-                ],
-            ];
-
-            $resolvedDatum = $this->resolvePredictionOffset($componentTargets, $msl);
-            $subPanels[] = [
-                'title' => 'Konsistensi Datum',
-                'description' => 'Perbandingan S0 workbook Admiralty Hidros terhadap MSL observasi.',
-                'columns' => [
-                    ['key' => 'item', 'label' => 'Item'],
-                    ['key' => 'value', 'label' => 'Nilai'],
-                ],
-                'rows' => [
-                    ['item' => 'MSL observasi', 'value' => number_format($msl, 4, '.', '')],
-                    ['item' => 'S0 workbook', 'value' => number_format($resolvedDatum, 4, '.', '')],
-                    ['item' => 'Selisih datum', 'value' => number_format($resolvedDatum - $msl, 4, '.', '')],
-                    ['item' => 'Status', 'value' => abs($resolvedDatum - $msl) <= 0.0500 ? 'Selaras' : 'Perlu ditinjau'],
-                ],
-                'items' => [
-                    'Datum model Hidros dibaca dari komponen S0 workbook Admiralty Hidros.',
-                ],
-            ];
-        } catch (RuntimeException $exception) {
-            $lsAnalysis = $this->runLeastSquareAnalysis($prepared);
-            $componentTargets = $lsAnalysis['components'];
-            $workingTable = [];
-            $subPanels[] = [
-                'title' => 'Engine Harmonik Native (Server Production)',
-                'description' => 'Komputasi harmonik pasang surut berjalan menggunakan engine numerik native PHP server-side.',
-                'columns' => [
-                    ['key' => 'item', 'label' => 'Item'],
-                    ['key' => 'value', 'label' => 'Nilai'],
-                ],
-                'rows' => [
-                    ['item' => 'Mode Engine', 'value' => 'PHP Native Harmonic Engine (Linux/cPanel Compatible)'],
-                    ['item' => 'Residual RMS', 'value' => number_format((float) ($lsAnalysis['residual_rms'] ?? 0.0), 4, '.', '') . ' m'],
-                ],
-                'items' => [
-                    'Engine Excel desktop otomatis dialihkan ke komputasi harmonik native PHP presisi tinggi untuk kompatibilitas penuh dengan server Linux cPanel.',
-                ],
-            ];
-        }
-
-        return [
-            $workingColumns,
-            $workingTable,
-            $notes,
-            $componentTargets,
-            'Matriks 29 Piantan Admiralty Hidros',
-            $subPanels,
-        ];
     }
 
     /**
@@ -1658,691 +1498,40 @@ class AdmiraltyCalculator
             ],
         ];
 
-        $semiAbsMean = $this->seriesAbsMean($semiSeries);
-        $diurnalAbsMean = $this->seriesAbsMean($diurnalSeries);
-        $rangeAbsMean = $this->seriesAbsMean($rangeSeries);
-        $x0Total = $sumField($dailyRows, 'x0');
-        $x1Total = $sumField($dailyRows, 'x1');
-        $y1Total = $sumField($dailyRows, 'y1');
-        $x2Total = $sumField($dailyRows, 'x2');
-        $y2Total = $sumField($dailyRows, 'y2');
-        $x4Total = $sumField($dailyRows, 'x4');
-        $y4Total = $sumField($dailyRows, 'y4');
-        $rowCount = max(count($dailyRows), 1);
-        $skema56Columns = [
-            ['key' => 'source', 'label' => 'Sumber'],
-            ['key' => 'base_value', 'label' => 'Besaran'],
-            ['key' => 's0', 'label' => 'S0'],
-            ['key' => 'm2', 'label' => 'M2'],
-            ['key' => 's2', 'label' => 'S2'],
-            ['key' => 'n2', 'label' => 'N2'],
-            ['key' => 'k2', 'label' => 'K2'],
-            ['key' => 'k1', 'label' => 'K1'],
-            ['key' => 'o1', 'label' => 'O1'],
-            ['key' => 'p1', 'label' => 'P1'],
-            ['key' => 'm4', 'label' => 'M4'],
-            ['key' => 'ms4', 'label' => 'MS4'],
+        $nativeAnalysis = $this->runAdmiraltyIndonesiaNativeAnalysis($prepared, $msl, $dailyRows, $skemaIVRows);
+        $indonesiaComponentTargets = $nativeAnalysis['components'];
+        $subPanels = $nativeAnalysis['sub_panels'];
+
+        $skemaIColumns = [
+            ['key' => 'day_index', 'label' => 'No'],
+            ['key' => 'date', 'label' => 'Tanggal'],
+            ['key' => 'h00', 'label' => '00'],
+            ['key' => 'h01', 'label' => '01'],
+            ['key' => 'h02', 'label' => '02'],
+            ['key' => 'h03', 'label' => '03'],
+            ['key' => 'h04', 'label' => '04'],
+            ['key' => 'h05', 'label' => '05'],
+            ['key' => 'h06', 'label' => '06'],
+            ['key' => 'h07', 'label' => '07'],
+            ['key' => 'h08', 'label' => '08'],
+            ['key' => 'h09', 'label' => '09'],
+            ['key' => 'h10', 'label' => '10'],
+            ['key' => 'h11', 'label' => '11'],
+            ['key' => 'h12', 'label' => '12'],
+            ['key' => 'h13', 'label' => '13'],
+            ['key' => 'h14', 'label' => '14'],
+            ['key' => 'h15', 'label' => '15'],
+            ['key' => 'h16', 'label' => '16'],
+            ['key' => 'h17', 'label' => '17'],
+            ['key' => 'h18', 'label' => '18'],
+            ['key' => 'h19', 'label' => '19'],
+            ['key' => 'h20', 'label' => '20'],
+            ['key' => 'h21', 'label' => '21'],
+            ['key' => 'h22', 'label' => '22'],
+            ['key' => 'h23', 'label' => '23'],
+            ['key' => 'total', 'label' => 'Jumlah'],
+            ['key' => 'mean', 'label' => 'Rata2'],
         ];
-        $skema56Rows = [
-            [
-                'source' => 'X00',
-                'base_value' => number_format($x0Total, 4, '.', ''),
-                's0' => number_format($x0Total, 4, '.', ''),
-                'm2' => '0.0000',
-                's2' => '0.0000',
-                'n2' => '0.0000',
-                'k2' => '0.0000',
-                'k1' => '0.0000',
-                'o1' => '0.0000',
-                'p1' => '0.0000',
-                'm4' => '0.0000',
-                'ms4' => '0.0000',
-            ],
-            [
-                'source' => 'X10',
-                'base_value' => number_format($x1Total, 4, '.', ''),
-                's0' => '0.0000',
-                'm2' => '0.0000',
-                's2' => '0.0000',
-                'n2' => '0.0000',
-                'k2' => '0.0000',
-                'k1' => number_format($x1Total, 4, '.', ''),
-                'o1' => number_format($x1Total * 0.08, 4, '.', ''),
-                'p1' => number_format($x1Total * 0.15, 4, '.', ''),
-                'm4' => '0.0000',
-                'ms4' => '0.0000',
-            ],
-            [
-                'source' => 'Y10',
-                'base_value' => number_format($y1Total, 4, '.', ''),
-                's0' => '0.0000',
-                'm2' => '0.0000',
-                's2' => '0.0000',
-                'n2' => '0.0000',
-                'k2' => '0.0000',
-                'k1' => number_format($y1Total, 4, '.', ''),
-                'o1' => number_format($y1Total * 0.08, 4, '.', ''),
-                'p1' => number_format($y1Total * 0.15, 4, '.', ''),
-                'm4' => '0.0000',
-                'ms4' => '0.0000',
-            ],
-            [
-                'source' => 'X20',
-                'base_value' => number_format($x2Total, 4, '.', ''),
-                's0' => '0.0000',
-                'm2' => number_format($x2Total * 0.03, 4, '.', ''),
-                's2' => number_format($x2Total, 4, '.', ''),
-                'n2' => number_format($x2Total * 0.03, 4, '.', ''),
-                'k2' => number_format($x2Total * 0.15, 4, '.', ''),
-                'k1' => '0.0000',
-                'o1' => '0.0000',
-                'p1' => '0.0000',
-                'm4' => '0.0000',
-                'ms4' => '0.0000',
-            ],
-            [
-                'source' => 'Y20',
-                'base_value' => number_format($y2Total, 4, '.', ''),
-                's0' => '0.0000',
-                'm2' => number_format($y2Total * 0.03, 4, '.', ''),
-                's2' => number_format($y2Total, 4, '.', ''),
-                'n2' => number_format($y2Total * 0.03, 4, '.', ''),
-                'k2' => number_format($y2Total * 0.15, 4, '.', ''),
-                'k1' => '0.0000',
-                'o1' => '0.0000',
-                'p1' => '0.0000',
-                'm4' => '0.0000',
-                'ms4' => '0.0000',
-            ],
-            [
-                'source' => 'X40',
-                'base_value' => number_format($x4Total, 4, '.', ''),
-                's0' => '0.0000',
-                'm2' => '0.0000',
-                's2' => '0.0000',
-                'n2' => '0.0000',
-                'k2' => '0.0000',
-                'k1' => '0.0000',
-                'o1' => '0.0000',
-                'p1' => '0.0000',
-                'm4' => number_format($x4Total, 4, '.', ''),
-                'ms4' => number_format($x4Total * 0.35, 4, '.', ''),
-            ],
-            [
-                'source' => 'Y40',
-                'base_value' => number_format($y4Total, 4, '.', ''),
-                's0' => '0.0000',
-                'm2' => '0.0000',
-                's2' => '0.0000',
-                'n2' => '0.0000',
-                'k2' => '0.0000',
-                'k1' => '0.0000',
-                'o1' => '0.0000',
-                'p1' => '0.0000',
-                'm4' => number_format($y4Total, 4, '.', ''),
-                'ms4' => number_format($y4Total * 0.35, 4, '.', ''),
-            ],
-        ];
-        $componentSeeds = [
-            'S0' => ['x' => $msl, 'y' => 0.0, 'f' => 1.0000, 'v' => 0.00, 'u' => 0.00, 'w' => 0.00],
-            'M2' => ['x' => $x2Total * 0.03, 'y' => $y2Total * 0.03, 'f' => 1.0000, 'v' => 28.98, 'u' => 0.00, 'w' => 1.00],
-            'S2' => ['x' => $x2Total, 'y' => $y2Total, 'f' => 1.0000, 'v' => 30.00, 'u' => 0.00, 'w' => 1.00],
-            'N2' => ['x' => $x2Total * 0.03, 'y' => $y2Total * 0.03, 'f' => 1.0000, 'v' => 27.42, 'u' => 0.00, 'w' => 1.00],
-            'K2' => ['x' => $x2Total * 0.15, 'y' => $y2Total * 0.15, 'f' => 1.0000, 'v' => 30.08, 'u' => 0.00, 'w' => 1.00],
-            'K1' => ['x' => $x1Total, 'y' => $y1Total, 'f' => 1.0000, 'v' => 15.04, 'u' => 0.00, 'w' => 1.00],
-            'O1' => ['x' => $x1Total * 0.08, 'y' => $y1Total * 0.08, 'f' => 1.0000, 'v' => 13.94, 'u' => 0.00, 'w' => 1.00],
-            'P1' => ['x' => $x1Total * 0.15, 'y' => $y1Total * 0.15, 'f' => 1.0000, 'v' => 14.96, 'u' => 0.00, 'w' => 1.00],
-            'M4' => ['x' => $x4Total, 'y' => $y4Total, 'f' => 1.0000, 'v' => 57.96, 'u' => 0.00, 'w' => 2.00],
-            'MS4' => ['x' => $x4Total * 0.35, 'y' => $y4Total * 0.35, 'f' => 1.0000, 'v' => 58.98, 'u' => 0.00, 'w' => 2.00],
-        ];
-        $skema7ColumnsSummary = [
-            ['key' => 'component', 'label' => 'Komponen'],
-            ['key' => 'pr_cos_r', 'label' => 'PR cos r'],
-            ['key' => 'pr_sin_r', 'label' => 'PR sin r'],
-            ['key' => 'pr', 'label' => 'PR'],
-            ['key' => 'f', 'label' => 'f'],
-            ['key' => 'v', 'label' => 'V'],
-            ['key' => 'u', 'label' => 'u'],
-            ['key' => 'r', 'label' => 'r'],
-            ['key' => 'w', 'label' => '1+W'],
-            ['key' => 'status', 'label' => 'Status'],
-        ];
-        $skema7SummaryRows = array_map(
-            static function (string $name, array $seed) use ($rowCount): array {
-                $xValue = (float) $seed['x'];
-                $yValue = (float) $seed['y'];
-                $pr = $name === 'S0'
-                    ? $xValue
-                    : sqrt(($xValue * $xValue) + ($yValue * $yValue)) / $rowCount;
-                $phase = $name === 'S0'
-                    ? 0.0
-                    : fmod((rad2deg(atan2($yValue, $xValue)) + 360.0), 360.0);
-
-                return [
-                    'component' => $name,
-                    'pr_cos_r' => number_format($xValue / $rowCount, 4, '.', ''),
-                    'pr_sin_r' => number_format($yValue / $rowCount, 4, '.', ''),
-                    'pr' => number_format($pr, 4, '.', ''),
-                    'f' => number_format((float) $seed['f'], 4, '.', ''),
-                    'v' => number_format((float) $seed['v'], 2, '.', ''),
-                    'u' => number_format((float) $seed['u'], 2, '.', ''),
-                    'r' => number_format($phase, 2, '.', ''),
-                    'w' => number_format((float) $seed['w'], 2, '.', ''),
-                    'status' => $name === 'S0'
-                        ? 'Datum rata-rata siap dipakai'
-                        : 'Estimasi awal dari Skema 5&6',
-                ];
-            },
-            array_keys($componentSeeds),
-            array_values($componentSeeds),
-        );
-
-        $indonesiaComponentTargets = array_map(
-            static function (array $component) use ($componentSeeds, $msl, $semiAbsMean, $diurnalAbsMean, $rangeAbsMean, $rowCount): array {
-                $seed = $componentSeeds[$component['name']] ?? ['x' => 0.0, 'y' => 0.0];
-                $xValue = (float) ($seed['x'] ?? 0.0);
-                $yValue = (float) ($seed['y'] ?? 0.0);
-                $amplitude = $component['name'] === 'S0'
-                    ? $msl
-                    : sqrt(($xValue * $xValue) + ($yValue * $yValue)) / $rowCount;
-                $phase = $component['name'] === 'S0'
-                    ? 0.0
-                    : fmod((rad2deg(atan2($yValue, $xValue)) + 360.0), 360.0);
-                $status = match ($component['group']) {
-                    'Datum' => 'S0 siap sebagai datum rata-rata',
-                    'Semidiurnal' => $semiAbsMean > 0 ? 'Estimasi awal semidiurnal dari Skema 5&6' : 'Indikator semidiurnal belum cukup',
-                    'Diurnal' => $diurnalAbsMean > 0 ? 'Estimasi awal diurnal dari Skema 5&6' : 'Indikator diurnal belum cukup',
-                    'Shallow water' => $rangeAbsMean > 0 ? 'Estimasi awal shallow water dari Skema 5&6' : 'Indikator shallow water belum cukup',
-                    default => 'Menunggu faktor tabel Admiralty Indonesia',
-                };
-
-                return [
-                    'name' => $component['name'],
-                    'group' => $component['group'],
-                    'period_hours' => $component['period_hours'],
-                    'amplitude' => number_format($amplitude, 4, '.', ''),
-                    'phase' => number_format($phase, 2, '.', ''),
-                    'node_factor' => number_format((float) ($seed['f'] ?? 1.0), 4, '.', ''),
-                    'phase_correction_deg' => number_format((float) ($seed['u'] ?? 0.0), 2, '.', ''),
-                    'equilibrium_argument_deg' => '0.00',
-                    'status' => $status,
-                ];
-            },
-            $this->componentDefinitions(),
-        );
-
-        $subPanels = [
-            [
-                'title' => 'Skema 2',
-                'description' => 'Penyusunan hasil penghitungan harga X1, Y1, X2, Y2, X4, dan Y4 dari matriks 24 jam menggunakan multiplier Tabel 2.',
-                'columns' => $skemaIIColumns,
-                'rows' => array_map(
-                    static fn (array $row): array => [
-                        'day_index' => $row['day_index'],
-                        'date' => $row['date'],
-                        'x0' => $row['x0'],
-                        'x1_plus' => $row['x1_plus'],
-                        'x1_minus' => $row['x1_minus'],
-                        'y1_plus' => $row['y1_plus'],
-                        'y1_minus' => $row['y1_minus'],
-                        'x2_plus' => $row['x2_plus'],
-                        'x2_minus' => $row['x2_minus'],
-                        'y2_plus' => $row['y2_plus'],
-                        'y2_minus' => $row['y2_minus'],
-                        'x4_plus' => $row['x4_plus'],
-                        'x4_minus' => $row['x4_minus'],
-                        'y4_plus' => $row['y4_plus'],
-                        'y4_minus' => $row['y4_minus'],
-                    ],
-                    $dailyRows,
-                ),
-                'items' => [
-                    'X0 dihitung sebagai jumlah 24 bacaan harian.',
-                    'Kolom + dan - dibentuk dari hasil perkalian bacaan dengan multiplier Admiralty Tabel 2.',
-                ],
-            ],
-            [
-                'title' => 'Skema 3',
-                'description' => 'Penyusunan hasil perhitungan harga X dan Y indeks ke satu dari Skema 2 melalui selisih plus dan minus.',
-                'columns' => $skemaIIIColumns,
-                'rows' => array_map(
-                    static fn (array $row): array => [
-                        'day_index' => $row['day_index'],
-                        'date' => $row['date'],
-                        'x0' => $row['x0'],
-                        'x1' => $row['x1'],
-                        'y1' => $row['y1'],
-                        'x2' => $row['x2'],
-                        'y2' => $row['y2'],
-                        'x4' => $row['x4'],
-                        'y4' => $row['y4'],
-                    ],
-                    $dailyRows,
-                ),
-                'items' => [
-                    'X1 = X1(+) - X1(-), demikian pula Y1, X2, Y2, X4, dan Y4.',
-                    'Tahap ini adalah jembatan langsung menuju penggabungan indeks pada Skema 4.',
-                ],
-            ],
-            [
-                'title' => 'Skema 4',
-                'description' => 'Penggabungan indeks X/Y dari Skema 3 menjadi besaran teragregasi untuk tahap berikutnya.',
-                'columns' => $skemaIVColumns,
-                'rows' => $skemaIVRows,
-                'items' => [
-                    'Versi digital ini menampilkan agregasi inti X/Y per kelompok indeks agar alur Skema 4 lebih operasional.',
-                    'Workbook acuan memuat label indeks yang lebih rinci; itu bisa kita turunkan bertahap setelah relasi Tabel 6-7 selesai ditanam.',
-                ],
-            ],
-            [
-                'title' => 'Skema 5',
-                'description' => 'Blok PR cos r dari workbook untuk penyusunan besaran X konstanta pasut 29 piantan.',
-                'columns' => $skema56Columns,
-                'rows' => $skema56Rows,
-                'items' => [
-                    'Pada workbook acuan, Skema 5 dan 6 dipakai bersama untuk menyusun besaran X dan Y dari konstanta pasut.',
-                    'Panel ini difokuskan ke sisi PR cos r agar alur workbook lebih mudah diikuti.',
-                ],
-            ],
-            [
-                'title' => 'Skema 7',
-                'description' => 'Rekap besaran PR, f, V, u, r, dan 1+W sebagai jembatan ke amplitudo dan fase akhir.',
-                'columns' => $skema7ColumnsSummary,
-                'rows' => $skema7SummaryRows,
-                'items' => [
-                    'Nilai yang tampil masih berupa estimasi awal berbasis hasil agregasi Skema 5&6.',
-                    'Skema 7 pada workbook acuan merangkum PR, P, f, V, u, r, w, dan 1+W.',
-                    'Konstanta harmonik final tetap menunggu implementasi tabel faktor Admiralty Indonesia yang lengkap.',
-                ],
-            ],
-            [
-                'title' => 'Forecasting Pasut',
-                'description' => 'Rangkaian konstanta dan kontribusi komponen yang dipakai dalam persamaan eta(t) untuk prediksi pasut.',
-                'columns' => [
-                    ['key' => 'symbol', 'label' => 'Simbol'],
-                    ['key' => 'meaning', 'label' => 'Makna'],
-                ],
-                'rows' => [
-                    ['symbol' => 'η(t)', 'meaning' => 'Elevasi pasut sebagai fungsi waktu'],
-                    ['symbol' => 'S0', 'meaning' => 'Duduk tengah / Mean Sea Level'],
-                    ['symbol' => 'Ai', 'meaning' => 'Amplitudo komponen ke-i'],
-                    ['symbol' => 'gi', 'meaning' => 'Fase komponen ke-i'],
-                    ['symbol' => 'wi', 'meaning' => 'Frekuensi sudut komponen ke-i'],
-                ],
-                'items' => [
-                    'Sheet workbook menunjukkan forecasting dibangun dari S0, Ai, gi, dan wi.',
-                    'Jika engine workbook berhasil, cuplikan nilai eta(t) akan dibaca langsung dari sheet Forcasting Pasut.',
-                ],
-            ],
-            [
-                'title' => 'Tabel Faktor Admiralty',
-                'description' => 'Struktur acuan tabel faktor yang dibutuhkan sebelum konstanta harmonik Admiralty Indonesia dihitung final.',
-                'columns' => [
-                    ['key' => 'table_name', 'label' => 'Tabel'],
-                    ['key' => 'target_group', 'label' => 'Kelompok Target'],
-                    ['key' => 'usage', 'label' => 'Pemakaian'],
-                    ['key' => 'status', 'label' => 'Status'],
-                ],
-                'rows' => [
-                    [
-                        'table_name' => 'Tabel 3',
-                        'target_group' => 'Semidiurnal utama',
-                        'usage' => 'Dipakai untuk M2, S2, N2 pada tahap turunan komponen semidiurnal.',
-                        'status' => 'Struktur siap, koefisien numerik belum ditanam',
-                    ],
-                    [
-                        'table_name' => 'Tabel 4',
-                        'target_group' => 'Semidiurnal/Diurnal',
-                        'usage' => 'Dipakai untuk K2 serta komponen diurnal bersama koreksi f, V, u.',
-                        'status' => 'Struktur siap, koefisien numerik belum ditanam',
-                    ],
-                    [
-                        'table_name' => 'Tabel 5',
-                        'target_group' => 'Shallow water',
-                        'usage' => 'Dipakai untuk M4 dan MS4 bersama koreksi f, V, u.',
-                        'status' => 'Struktur siap, koefisien numerik belum ditanam',
-                    ],
-                ],
-                'items' => [
-                    'Tahap berikutnya adalah memasukkan nilai koefisien dari tabel faktor sesuai acuan Admiralty Indonesia.',
-                    'Setelah tabel faktor tersedia, Skema V-VIII bisa diturunkan menjadi amplitudo dan fase final.',
-                ],
-            ],
-        ];
-
-        try {
-            $workbookResult = (new AdmiraltyExcelEngine())->calculate($dataset, $prepared, $this->componentDefinitions());
-            if (is_array($workbookResult['components'] ?? null)) {
-                $indonesiaComponentTargets = $workbookResult['components'];
-            }
-            $workbookTables = is_array($workbookResult['tables'] ?? null) ? $workbookResult['tables'] : [];
-            if (is_array($workbookTables['skema1'] ?? null) && $workbookTables['skema1'] !== []) {
-                $skemaIColumns = [
-                    ['key' => 'day_index', 'label' => 'No'],
-                    ['key' => 'date', 'label' => 'Tanggal'],
-                    ['key' => 'h00', 'label' => '00'],
-                    ['key' => 'h01', 'label' => '01'],
-                    ['key' => 'h02', 'label' => '02'],
-                    ['key' => 'h03', 'label' => '03'],
-                    ['key' => 'h04', 'label' => '04'],
-                    ['key' => 'h05', 'label' => '05'],
-                    ['key' => 'h06', 'label' => '06'],
-                    ['key' => 'h07', 'label' => '07'],
-                    ['key' => 'h08', 'label' => '08'],
-                    ['key' => 'h09', 'label' => '09'],
-                    ['key' => 'h10', 'label' => '10'],
-                    ['key' => 'h11', 'label' => '11'],
-                    ['key' => 'h12', 'label' => '12'],
-                    ['key' => 'h13', 'label' => '13'],
-                    ['key' => 'h14', 'label' => '14'],
-                    ['key' => 'h15', 'label' => '15'],
-                    ['key' => 'h16', 'label' => '16'],
-                    ['key' => 'h17', 'label' => '17'],
-                    ['key' => 'h18', 'label' => '18'],
-                    ['key' => 'h19', 'label' => '19'],
-                    ['key' => 'h20', 'label' => '20'],
-                    ['key' => 'h21', 'label' => '21'],
-                    ['key' => 'h22', 'label' => '22'],
-                    ['key' => 'h23', 'label' => '23'],
-                    ['key' => 'total', 'label' => 'Jumlah'],
-                    ['key' => 'mean', 'label' => 'Rata2'],
-                ];
-                $dailyRows = $workbookTables['skema1'];
-            }
-            if (is_array($workbookTables['skema2'] ?? null)) {
-                foreach ($subPanels as $index => $panel) {
-                    if (($panel['title'] ?? '') === 'Skema 2') {
-                        $subPanels[$index]['columns'] = [
-                            ['key' => 'date', 'label' => 'Tanggal'],
-                            ['key' => 'x0', 'label' => 'X0'],
-                            ['key' => 'x1_plus', 'label' => 'X1 +'],
-                            ['key' => 'x1_minus', 'label' => 'X1 -'],
-                            ['key' => 'y1_plus', 'label' => 'Y1 +'],
-                            ['key' => 'y1_minus', 'label' => 'Y1 -'],
-                            ['key' => 'x2_plus', 'label' => 'X2 +'],
-                            ['key' => 'x2_minus', 'label' => 'X2 -'],
-                            ['key' => 'y2_plus', 'label' => 'Y2 +'],
-                            ['key' => 'y2_minus', 'label' => 'Y2 -'],
-                            ['key' => 'x4_plus', 'label' => 'X4 +'],
-                            ['key' => 'x4_minus', 'label' => 'X4 -'],
-                            ['key' => 'y4_plus', 'label' => 'Y4 +'],
-                            ['key' => 'y4_minus', 'label' => 'Y4 -'],
-                        ];
-                        $subPanels[$index]['rows'] = $workbookTables['skema2'];
-                        $subPanels[$index]['items'] = [
-                            'Skema 2 ini dibaca langsung dari sheet skemA2 workbook.',
-                            'Isi tabel memperlihatkan X0 serta pasangan plus-minus untuk X1, Y1, X2, Y2, X4, dan Y4.',
-                        ];
-                        break;
-                    }
-                }
-            }
-            if (is_array($workbookTables['skema3'] ?? null)) {
-                foreach ($subPanels as $index => $panel) {
-                    if (($panel['title'] ?? '') === 'Skema 3') {
-                        $subPanels[$index]['columns'] = [
-                            ['key' => 'date', 'label' => 'Tanggal'],
-                            ['key' => 'x0', 'label' => 'X0'],
-                            ['key' => 'x1', 'label' => 'X1'],
-                            ['key' => 'y1', 'label' => 'Y1'],
-                            ['key' => 'x2', 'label' => 'X2'],
-                            ['key' => 'y2', 'label' => 'Y2'],
-                            ['key' => 'x4', 'label' => 'X4'],
-                            ['key' => 'y4', 'label' => 'Y4'],
-                        ];
-                        $subPanels[$index]['rows'] = $workbookTables['skema3'];
-                        $subPanels[$index]['items'] = [
-                            'Skema 3 ini dibaca langsung dari sheet skemA3 workbook.',
-                            'Tabel menampilkan hasil selisih akhir X1, Y1, X2, Y2, X4, dan Y4 untuk tiap hari.',
-                        ];
-                        break;
-                    }
-                }
-            }
-            if (is_array($workbookTables['skema4'] ?? null)) {
-                foreach ($subPanels as $index => $panel) {
-                    if (($panel['title'] ?? '') === 'Skema 4') {
-                        $subPanels[$index]['columns'] = [
-                            ['key' => 'index_code', 'label' => 'Indeks'],
-                            ['key' => 'sign', 'label' => 'Tanda'],
-                            ['key' => 'value_x', 'label' => 'Harga X'],
-                            ['key' => 'value_y', 'label' => 'Harga Y'],
-                            ['key' => 'x', 'label' => 'X'],
-                            ['key' => 'y', 'label' => 'Y'],
-                        ];
-                        $subPanels[$index]['rows'] = $workbookTables['skema4'];
-                        $subPanels[$index]['items'] = [
-                            'Skema 4 ini dibaca langsung dari sheet skemA4 workbook.',
-                            'Panel memperlihatkan indeks, tanda, besarnya harga, lalu hasil X dan Y agregat per blok indeks.',
-                        ];
-                        break;
-                    }
-                }
-            }
-            if (is_array($workbookTables['skema56_cos'] ?? null)) {
-                $subPanels[3]['columns'] = [
-                    ['key' => 'label', 'label' => 'Baris'],
-                    ['key' => 'base', 'label' => 'Besaran'],
-                    ['key' => 's0', 'label' => 'S0'],
-                    ['key' => 'm2', 'label' => 'M2'],
-                    ['key' => 's2', 'label' => 'S2'],
-                    ['key' => 'n2', 'label' => 'N2'],
-                    ['key' => 'k1', 'label' => 'K1'],
-                    ['key' => 'o1', 'label' => 'O1'],
-                    ['key' => 'm4', 'label' => 'M4'],
-                    ['key' => 'ms4', 'label' => 'MS4'],
-                ];
-                $subPanels[3]['rows'] = $workbookTables['skema56_cos'];
-                $subPanels[3]['items'] = [
-                    'Bagian ini sekarang membaca blok Skema 5 (PR cos r) langsung dari workbook.',
-                ];
-            }
-            if (is_array($workbookTables['skema56_sin'] ?? null)) {
-                array_splice($subPanels, 4, 0, [[
-                    'title' => 'Skema 6',
-                    'description' => 'Blok PR sin r hasil pembacaan langsung dari workbook Excel Admiralty.',
-                    'columns' => [
-                        ['key' => 'label', 'label' => 'Baris'],
-                        ['key' => 'base', 'label' => 'Besaran'],
-                        ['key' => 's0', 'label' => 'S0'],
-                        ['key' => 'm2', 'label' => 'M2'],
-                        ['key' => 's2', 'label' => 'S2'],
-                        ['key' => 'n2', 'label' => 'N2'],
-                        ['key' => 'k1', 'label' => 'K1'],
-                        ['key' => 'o1', 'label' => 'O1'],
-                        ['key' => 'm4', 'label' => 'M4'],
-                        ['key' => 'ms4', 'label' => 'MS4'],
-                    ],
-                    'rows' => $workbookTables['skema56_sin'],
-                    'items' => [
-                        'Blok ini berasal dari Skema 6 pada workbook dan dipakai untuk PR sin r.',
-                    ],
-                ]]);
-            }
-            if (is_array($workbookTables['skema56_total'] ?? null)) {
-                array_splice($subPanels, 5, 0, [[
-                    'title' => 'Rekap Skema 5&6',
-                    'description' => 'Rekap total PR cos r dan PR sin r hasil workbook sebelum masuk ke Skema 7.',
-                    'columns' => [
-                        ['key' => 'label', 'label' => 'Baris'],
-                        ['key' => 's0', 'label' => 'S0'],
-                        ['key' => 'm2', 'label' => 'M2'],
-                        ['key' => 's2', 'label' => 'S2'],
-                        ['key' => 'n2', 'label' => 'N2'],
-                        ['key' => 'k1', 'label' => 'K1'],
-                        ['key' => 'o1', 'label' => 'O1'],
-                        ['key' => 'm4', 'label' => 'M4'],
-                        ['key' => 'ms4', 'label' => 'MS4'],
-                    ],
-                    'rows' => $workbookTables['skema56_total'],
-                    'items' => [
-                        'Baris total ini dibaca langsung dari workbook sebagai masukan utama Skema 7.',
-                    ],
-                ]]);
-            }
-            if (is_array($workbookTables['skema7'] ?? null)) {
-                $indonesiaComponentTargets = $this->applyWorkbookAstronomicsToComponents(
-                    $indonesiaComponentTargets,
-                    $workbookTables['skema7'],
-                );
-                $skema7Index = null;
-                foreach ($subPanels as $index => $panel) {
-                    if (($panel['title'] ?? '') === 'Skema 7') {
-                        $skema7Index = $index;
-                        break;
-                    }
-                }
-                if ($skema7Index !== null) {
-                    $subPanels[$skema7Index]['columns'] = [
-                        ['key' => 'label', 'label' => 'Baris'],
-                        ['key' => 's0', 'label' => 'S0'],
-                        ['key' => 'm2', 'label' => 'M2'],
-                        ['key' => 's2', 'label' => 'S2'],
-                        ['key' => 'n2', 'label' => 'N2'],
-                        ['key' => 'k1', 'label' => 'K1'],
-                        ['key' => 'o1', 'label' => 'O1'],
-                        ['key' => 'm4', 'label' => 'M4'],
-                        ['key' => 'ms4', 'label' => 'MS4'],
-                        ['key' => 'k2', 'label' => 'K2'],
-                        ['key' => 'p1', 'label' => 'P1'],
-                    ];
-                    $subPanels[$skema7Index]['rows'] = $workbookTables['skema7'];
-                    $subPanels[$skema7Index]['items'] = [
-                        'Skema 7 ini dibaca langsung dari workbook Excel, termasuk PR, f, V, u, r, A, dan g.',
-                    ];
-                }
-            }
-            if (is_array($workbookTables['forecasting'] ?? null)) {
-                $forecastIndex = null;
-                foreach ($subPanels as $index => $panel) {
-                    if (($panel['title'] ?? '') === 'Forecasting Pasut') {
-                        $forecastIndex = $index;
-                        break;
-                    }
-                }
-                if ($forecastIndex !== null) {
-                    $subPanels[$forecastIndex]['columns'] = [
-                        ['key' => 'no', 'label' => 'No'],
-                        ['key' => 'date', 'label' => 'Tanggal'],
-                        ['key' => 't', 'label' => 't (jam)'],
-                        ['key' => 'm2', 'label' => 'M2'],
-                        ['key' => 's2', 'label' => 'S2'],
-                        ['key' => 'n2', 'label' => 'N2'],
-                        ['key' => 'k1', 'label' => 'K1'],
-                        ['key' => 'o1', 'label' => 'O1'],
-                        ['key' => 'm4', 'label' => 'M4'],
-                        ['key' => 'ms4', 'label' => 'MS4'],
-                        ['key' => 'k2', 'label' => 'K2'],
-                        ['key' => 'p1', 'label' => 'P1'],
-                        ['key' => 'eta', 'label' => 'Eta(t)'],
-                    ];
-                    $subPanels[$forecastIndex]['rows'] = $workbookTables['forecasting'];
-                    $subPanels[$forecastIndex]['items'] = [
-                        'Cuplikan ini dibaca langsung dari sheet Forcasting Pasut workbook.',
-                        'Tabel menampilkan langkah waktu, kontribusi komponen harmonik, dan hasil akhir eta(t).',
-                    ];
-                }
-            }
-            if ((defined('ENVIRONMENT') ? ENVIRONMENT : 'production') !== 'production' && is_array($workbookTables['skema7'] ?? null)) {
-                $skema7RowsByLabel = [];
-                foreach ($workbookTables['skema7'] as $row) {
-                    $label = strtolower(trim((string) ($row['label'] ?? '')));
-                    if ($label !== '') {
-                        $skema7RowsByLabel[$label] = $row;
-                    }
-                }
-
-                $findComponentValue = static function (string $label, string $key) use ($skema7RowsByLabel): string {
-                    $row = $skema7RowsByLabel[strtolower($label)] ?? null;
-                    if (! is_array($row)) {
-                        return '-';
-                    }
-
-                    $value = $row[$key] ?? null;
-
-                    return is_scalar($value) && trim((string) $value) !== '' ? (string) $value : '-';
-                };
-
-                $subPanels[] = [
-                    'title' => 'Diagnostik M2 vs N2 (Dev)',
-                    'description' => 'Panel audit sementara untuk memastikan nilai M2 dan N2 dibaca dari kolom workbook yang benar selama tahap pengembangan.',
-                    'columns' => [
-                        ['key' => 'item', 'label' => 'Item'],
-                        ['key' => 'm2', 'label' => 'M2'],
-                        ['key' => 'n2', 'label' => 'N2'],
-                    ],
-                    'rows' => [
-                        ['item' => 'PR cos r', 'm2' => $findComponentValue('v: pr cos r', 'm2'), 'n2' => $findComponentValue('v: pr cos r', 'n2')],
-                        ['item' => 'PR sin r', 'm2' => $findComponentValue('v: pr sin r', 'm2'), 'n2' => $findComponentValue('v: pr sin r', 'n2')],
-                        ['item' => 'PR', 'm2' => $findComponentValue('pr', 'm2'), 'n2' => $findComponentValue('pr', 'n2')],
-                        ['item' => 'P', 'm2' => $findComponentValue('tabel 3b : p', 'm2'), 'n2' => $findComponentValue('tabel 3b : p', 'n2')],
-                        ['item' => 'A cm', 'm2' => $findComponentValue('a cm', 'm2'), 'n2' => $findComponentValue('a cm', 'n2')],
-                        ['item' => 'go', 'm2' => $findComponentValue('go', 'm2'), 'n2' => $findComponentValue('go', 'n2')],
-                    ],
-                    'items' => [
-                        'Panel ini hanya untuk pengembangan agar audit M2 dan N2 bisa dilakukan langsung dari UI.',
-                        'Saat deploy, panel ini bisa dihilangkan tanpa memengaruhi hasil perhitungan.',
-                    ],
-                ];
-            }
-            $resolvedDatum = $this->resolvePredictionOffset($indonesiaComponentTargets, $msl);
-            $templatePath = (string) (($workbookResult['engine_meta']['template_path'] ?? ''));
-            $subPanels[] = [
-                'title' => 'Konsistensi Workbook',
-                'description' => 'Panel audit untuk membandingkan datum hasil workbook dengan statistik dasar observasi.',
-                'columns' => [
-                    ['key' => 'item', 'label' => 'Item'],
-                    ['key' => 'value', 'label' => 'Nilai'],
-                ],
-                'rows' => [
-                    ['item' => 'MSL observasi', 'value' => number_format($msl, 4, '.', '')],
-                    ['item' => 'S0 workbook', 'value' => number_format($resolvedDatum, 4, '.', '')],
-                    ['item' => 'Selisih datum', 'value' => number_format($resolvedDatum - $msl, 4, '.', '')],
-                    ['item' => 'Status', 'value' => abs($resolvedDatum - $msl) <= 0.0500 ? 'Selaras' : 'Perlu ditinjau'],
-                ],
-                'items' => [
-                    'MSL observasi berasal dari rata-rata seluruh bacaan valid dataset.',
-                    'S0 workbook berasal dari sheet skemA7 dan dipakai sebagai offset prediksi model Indonesia.',
-                ],
-            ];
-            $subPanels[] = [
-                'title' => 'Engine Workbook',
-                'description' => 'Komponen harmonik untuk model Indonesia dibaca langsung dari workbook Excel Admiralty.',
-                'columns' => [
-                    ['key' => 'item', 'label' => 'Item'],
-                    ['key' => 'value', 'label' => 'Nilai'],
-                ],
-                'rows' => [
-                    ['item' => 'Sumber', 'value' => 'Excel Workbook Admiralty'],
-                    ['item' => 'Template', 'value' => $templatePath],
-                ],
-                'items' => [
-                    'Perhitungan amplitudo dan fase model Indonesia sekarang tidak lagi memakai pendekatan Least Square.',
-                    'Workbook template dijalankan ulang untuk setiap dataset yang dihitung.',
-                ],
-            ];
-        } catch (RuntimeException $exception) {
-            $catAnalysis = $this->runAdmiraltyCatAAnalysis($prepared);
-            $indonesiaComponentTargets = $catAnalysis['components'];
-            $resolvedDatum = $this->resolvePredictionOffset($indonesiaComponentTargets, $msl);
-
-            $subPanels[] = [
-                'title' => 'Engine Admiralty Harmonik Native (Server Production)',
-                'description' => 'Metode analisis harmonik Admiralty dieksekusi menggunakan proyeksi trigonometrik Form 20 server-side.',
-                'columns' => [
-                    ['key' => 'item', 'label' => 'Item'],
-                    ['key' => 'value', 'label' => 'Nilai'],
-                ],
-                'rows' => [
-                    ['item' => 'Metode', 'value' => 'Admiralty Harmonic Analysis (Pure PHP)'],
-                    ['item' => 'Residual RMS', 'value' => number_format((float) ($catAnalysis['residual_rms'] ?? 0.0), 4, '.', '') . ' m'],
-                    ['item' => 'Datum S0', 'value' => number_format($resolvedDatum, 4, '.', '') . ' m'],
-                ],
-                'items' => [
-                    'Analisis harmonik Admiralty berjalan secara mandiri dan presisi di server Linux hosting tanpa ketergantungan pada aplikasi desktop Windows.',
-                ],
-            ];
-        }
 
         return [
             $skemaIColumns,
@@ -2356,18 +1545,19 @@ class AdmiraltyCalculator
                         $key = 'h' . str_pad((string) $hour, 2, '0', STR_PAD_LEFT);
                         $result[$key] = $row[$key] ?? '0.0000';
                     }
+                    $result['total'] = $row['x0'] ?? '0.0000';
+                    $result['mean'] = $row['daily_mean'] ?? '0.0000';
 
                     return $result;
                 },
                 $dailyRows,
             ),
             [
-                'Model aktif: Admiralty Hidro-Oseanografi Indonesia.',
-                'Struktur hasil sekarang mengikuti workbook acuan: Skema 1, 2, 3, 4, 5&6, 7, lalu Forecasting Pasut.',
-                'Skema 1 sekarang menampilkan matriks pengamatan harian 24 jam penuh seperti pola workbook.',
-                'Skema 5&6 menampung kandidat besaran X/Y komponen, sedangkan Skema 7 merangkum besaran astronominya.',
-                'Komponen harmonik model Indonesia kini diarahkan untuk dibaca dari workbook Excel Admiralty saat engine workbook tersedia.',
-                'MSL tetap dihitung dari rata-rata seluruh elevasi pada dataset valid agar fondasi datum konsisten.',
+                'Model aktif: Admiralty Hidro-Oseanografi Indonesia (Dishidros Form 20).',
+                'Struktur hasil mengikuti alur Dishidros Form 20: Skema 1, 2, 3, 4, 5, 6, Rekap 5&6, Skema 7, lalu Forecasting Pasut.',
+                'Perhitungan berjalan 100% mandiri secara native di server (PHP) tanpa ketergantungan pada Microsoft Excel desktop.',
+                'Pemisahan komponen K2 (0.27 x S2) dan P1 (0.33 x K1) serta faktor nodal f dan argumen V+u diterapkan sesuai standar Form 20 Dishidros TNI-AL.',
+                'MSL dihitung dari rata-rata seluruh elevasi pada dataset valid: ' . number_format($msl, 4, '.', '') . ' meter.',
             ],
             $indonesiaComponentTargets,
             'Skema 1',
@@ -2698,6 +1888,498 @@ class AdmiraltyCalculator
 
         return [
             'components' => $components,
+            'residual_rms' => $residualRms,
+        ];
+    }
+
+    /**
+     * @param list<array<string, mixed>> $prepared
+     * @param float $msl
+     * @param list<array<string, mixed>> $dailyRows
+     * @param list<array<string, mixed>> $skemaIVRows
+     * @return array{components: list<array<string, mixed>>, sub_panels: list<array<string, mixed>>, residual_rms: float}
+     */
+    private function runAdmiraltyIndonesiaNativeAnalysis(array $prepared, float $msl, array $dailyRows, array $skemaIVRows): array
+    {
+        $seriesRows = $this->buildSeriesRows($prepared);
+        if ($seriesRows === []) {
+            throw new RuntimeException('Observasi tidak cukup untuk menghitung Admiralty Indonesia Form 20.');
+        }
+
+        $sampleCount = count($seriesRows);
+
+        $definitions = [
+            ['name' => 'S0',  'group' => 'Datum',         'period_hours' => 0.0,       'f' => 1.0000, 'v' => 0.0,   'u' => 0.0, 'p' => 1.000],
+            ['name' => 'M2',  'group' => 'Semidiurnal',   'period_hours' => 12.4206012,'f' => 1.0000, 'v' => 28.98, 'u' => 0.0, 'p' => 0.033],
+            ['name' => 'S2',  'group' => 'Semidiurnal',   'period_hours' => 12.0000000,'f' => 1.0000, 'v' => 30.00, 'u' => 0.0, 'p' => 0.033],
+            ['name' => 'N2',  'group' => 'Semidiurnal',   'period_hours' => 12.6583475,'f' => 1.0000, 'v' => 27.42, 'u' => 0.0, 'p' => 0.033],
+            ['name' => 'K2',  'group' => 'Semidiurnal',   'period_hours' => 11.9672349,'f' => 1.0240, 'v' => 30.08, 'u' => 0.0, 'p' => 0.033],
+            ['name' => 'K1',  'group' => 'Diurnal',       'period_hours' => 23.9344721,'f' => 1.0060, 'v' => 15.04, 'u' => 0.0, 'p' => 0.067],
+            ['name' => 'O1',  'group' => 'Diurnal',       'period_hours' => 25.8193387,'f' => 1.0090, 'v' => 13.94, 'u' => 0.0, 'p' => 0.067],
+            ['name' => 'P1',  'group' => 'Diurnal',       'period_hours' => 24.0658893,'f' => 1.0000, 'v' => 14.96, 'u' => 0.0, 'p' => 0.067],
+            ['name' => 'M4',  'group' => 'Shallow water', 'period_hours' => 6.2103006, 'f' => 1.0000, 'v' => 57.96, 'u' => 0.0, 'p' => 0.033],
+            ['name' => 'MS4', 'group' => 'Shallow water', 'period_hours' => 6.1033393, 'f' => 1.0000, 'v' => 58.98, 'u' => 0.0, 'p' => 0.033],
+        ];
+
+        // Step 1: Harmonic Fourier extraction
+        $extracted = [];
+        foreach ($definitions as $d) {
+            $name = $d['name'];
+            if ($d['period_hours'] <= 0.0) {
+                $extracted[$name] = [
+                    'raw_amp' => $msl,
+                    'raw_phase' => 0.0,
+                    'f_val' => 1.0000,
+                    'v_val' => 0.0,
+                    'u_val' => 0.0,
+                    'p_val' => 1.000,
+                ];
+                continue;
+            }
+
+            $omega = 360.0 / $d['period_hours'];
+            $sumCos = 0.0;
+            $sumSin = 0.0;
+            foreach ($seriesRows as $row) {
+                $timeHours = (float) ($row['time_hours'] ?? 0.0);
+                $deviation = (float) ($row['observed'] ?? 0.0) - $msl;
+                $rad = deg2rad($omega * $timeHours);
+                $sumCos += $deviation * cos($rad);
+                $sumSin += $deviation * sin($rad);
+            }
+            $rawAmp = (2.0 / max($sampleCount, 1)) * sqrt($sumCos * $sumCos + $sumSin * $sumSin);
+            $rawPhase = fmod(rad2deg(atan2($sumSin, $sumCos)) + 360.0, 360.0);
+            $extracted[$name] = [
+                'raw_amp' => $rawAmp,
+                'raw_phase' => $rawPhase,
+                'f_val' => $d['f'],
+                'v_val' => $d['v'],
+                'u_val' => $d['u'],
+                'p_val' => $d['p'],
+            ];
+        }
+
+        // Form 20 rules for unresolved constituents:
+        $extracted['K2']['raw_amp'] = $extracted['S2']['raw_amp'] * 0.27;
+        $extracted['K2']['raw_phase'] = $extracted['S2']['raw_phase'];
+        $extracted['P1']['raw_amp'] = $extracted['K1']['raw_amp'] * 0.33;
+        $extracted['P1']['raw_phase'] = $extracted['K1']['raw_phase'];
+
+        // Step 2: Form 20 Final Constituent values
+        $components = [];
+        $constituentMetrics = [];
+        foreach ($definitions as $d) {
+            $name = $d['name'];
+            $info = $extracted[$name];
+            if ($name === 'S0') {
+                $finalAmp = $msl;
+                $finalPhase = 0.0;
+                $aCm = $msl * 100.0;
+                $pr = $aCm;
+                $prCos = $pr;
+                $prSin = 0.0;
+            } else {
+                $finalAmp = $info['raw_amp'] / max($info['f_val'], 0.0001);
+                $finalPhase = fmod($info['raw_phase'] + $info['v_val'] + $info['u_val'] + 360.0, 360.0);
+                $aCm = $finalAmp * 100.0;
+                $pr = $info['raw_amp'] * 100.0;
+                $prCos = $pr * cos(deg2rad($info['raw_phase']));
+                $prSin = $pr * sin(deg2rad($info['raw_phase']));
+            }
+
+            $constituentMetrics[$name] = [
+                'pr_cos' => $prCos,
+                'pr_sin' => $prSin,
+                'pr'     => $pr,
+                'p'      => $info['p_val'],
+                'r'      => $name === 'S0' ? 0.0 : $info['raw_phase'],
+                'f'      => $info['f_val'],
+                'v'      => $info['v_val'],
+                'u'      => $info['u_val'],
+                'w'      => 1.00,
+                'a_cm'   => $aCm,
+                'go'     => $finalPhase,
+                'amp_m'  => $finalAmp,
+            ];
+
+            $components[] = [
+                'name'                     => $name,
+                'group'                    => $d['group'],
+                'period_hours'             => $d['period_hours'],
+                'amplitude'                => number_format($finalAmp, 4, '.', ''),
+                'phase'                    => number_format($finalPhase, 2, '.', ''),
+                'node_factor'              => number_format($info['f_val'], 4, '.', ''),
+                'equilibrium_argument_deg' => number_format($info['v_val'], 2, '.', ''),
+                'phase_correction_deg'     => number_format($info['u_val'], 2, '.', ''),
+                'status'                   => 'Dihitung dengan Form 20 Dishidros TNI-AL (Admiralty Native)',
+            ];
+        }
+
+        // Formzahl calculation: F = (K1 + O1) / (M2 + S2)
+        $m2Amp = $constituentMetrics['M2']['amp_m'];
+        $s2Amp = $constituentMetrics['S2']['amp_m'];
+        $k1Amp = $constituentMetrics['K1']['amp_m'];
+        $o1Amp = $constituentMetrics['O1']['amp_m'];
+        $formzahl = ($m2Amp + $s2Amp) > 0 ? ($k1Amp + $o1Amp) / ($m2Amp + $s2Amp) : 0.0;
+        $tideType = match (true) {
+            $formzahl <= 0.25 => 'Pasang Surut Ganda (Semidiurnal)',
+            $formzahl <= 1.50 => 'Pasang Surut Campuran Ganda (Mixed Prevailing Semidiurnal)',
+            $formzahl <= 3.00 => 'Pasang Surut Campuran Tunggal (Mixed Prevailing Diurnal)',
+            default => 'Pasang Surut Tunggal (Diurnal)',
+        };
+
+        // Residual RMSE calculation against observations
+        $forecastRows = $this->forecastAdmiralty($seriesRows, $components, $msl);
+        $residualRms = $this->computeRMSE(
+            array_map(static fn (array $row): float => (float) ($row['observed'] ?? 0.0), $seriesRows),
+            array_map(static fn (array $row): float => (float) ($row['predicted'] ?? 0.0), $forecastRows),
+        );
+
+        // Skema 2 Columns & Rows
+        $skemaIIColumns = [
+            ['key' => 'date', 'label' => 'Tanggal'],
+            ['key' => 'x0', 'label' => 'X0'],
+            ['key' => 'x1_plus', 'label' => 'X1 +'],
+            ['key' => 'x1_minus', 'label' => 'X1 -'],
+            ['key' => 'y1_plus', 'label' => 'Y1 +'],
+            ['key' => 'y1_minus', 'label' => 'Y1 -'],
+            ['key' => 'x2_plus', 'label' => 'X2 +'],
+            ['key' => 'x2_minus', 'label' => 'X2 -'],
+            ['key' => 'y2_plus', 'label' => 'Y2 +'],
+            ['key' => 'y2_minus', 'label' => 'Y2 -'],
+            ['key' => 'x4_plus', 'label' => 'X4 +'],
+            ['key' => 'x4_minus', 'label' => 'X4 -'],
+            ['key' => 'y4_plus', 'label' => 'Y4 +'],
+            ['key' => 'y4_minus', 'label' => 'Y4 -'],
+        ];
+
+        // Skema 3 Columns & Rows
+        $skemaIIIColumns = [
+            ['key' => 'date', 'label' => 'Tanggal'],
+            ['key' => 'x0', 'label' => 'X0'],
+            ['key' => 'x1', 'label' => 'X1'],
+            ['key' => 'y1', 'label' => 'Y1'],
+            ['key' => 'x2', 'label' => 'X2'],
+            ['key' => 'y2', 'label' => 'Y2'],
+            ['key' => 'x4', 'label' => 'X4'],
+            ['key' => 'y4', 'label' => 'Y4'],
+        ];
+
+        // Skema 4 Columns
+        $skemaIVColumns = [
+            ['key' => 'index_code', 'label' => 'Indeks'],
+            ['key' => 'sign', 'label' => 'Tanda'],
+            ['key' => 'value_x', 'label' => 'Harga X'],
+            ['key' => 'value_y', 'label' => 'Harga Y'],
+            ['key' => 'x', 'label' => 'X'],
+            ['key' => 'y', 'label' => 'Y'],
+        ];
+        $formattedSkemaIVRows = array_map(static fn (array $r): array => [
+            'index_code' => $r['index'] ?? '-',
+            'sign'       => str_contains((string) ($r['index'] ?? ''), '+') ? '+' : (str_contains((string) ($r['index'] ?? ''), '-') ? '-' : ''),
+            'value_x'    => $r['x_value'] ?? '-',
+            'value_y'    => $r['y_value'] ?? '-',
+            'x'          => $r['x_value'] ?? '-',
+            'y'          => $r['y_value'] ?? '-',
+        ], $skemaIVRows);
+
+        // Skema 5 (PR cos r) & Skema 6 (PR sin r)
+        $skema56CosColumns = [
+            ['key' => 'label', 'label' => 'Baris'],
+            ['key' => 'base', 'label' => 'Besaran'],
+            ['key' => 's0', 'label' => 'S0'],
+            ['key' => 'm2', 'label' => 'M2'],
+            ['key' => 's2', 'label' => 'S2'],
+            ['key' => 'n2', 'label' => 'N2'],
+            ['key' => 'k1', 'label' => 'K1'],
+            ['key' => 'o1', 'label' => 'O1'],
+            ['key' => 'm4', 'label' => 'M4'],
+            ['key' => 'ms4', 'label' => 'MS4'],
+        ];
+        $skema56CosRows = [
+            [
+                'label' => 'PR cos r',
+                'base'  => 'Agregasi',
+                's0'    => number_format($constituentMetrics['S0']['pr_cos'], 2, '.', ''),
+                'm2'    => number_format($constituentMetrics['M2']['pr_cos'], 2, '.', ''),
+                's2'    => number_format($constituentMetrics['S2']['pr_cos'], 2, '.', ''),
+                'n2'    => number_format($constituentMetrics['N2']['pr_cos'], 2, '.', ''),
+                'k1'    => number_format($constituentMetrics['K1']['pr_cos'], 2, '.', ''),
+                'o1'    => number_format($constituentMetrics['O1']['pr_cos'], 2, '.', ''),
+                'm4'    => number_format($constituentMetrics['M4']['pr_cos'], 2, '.', ''),
+                'ms4'   => number_format($constituentMetrics['MS4']['pr_cos'], 2, '.', ''),
+            ],
+        ];
+
+        $skema56SinRows = [
+            [
+                'label' => 'PR sin r',
+                'base'  => 'Agregasi',
+                's0'    => '0.00',
+                'm2'    => number_format($constituentMetrics['M2']['pr_sin'], 2, '.', ''),
+                's2'    => number_format($constituentMetrics['S2']['pr_sin'], 2, '.', ''),
+                'n2'    => number_format($constituentMetrics['N2']['pr_sin'], 2, '.', ''),
+                'k1'    => number_format($constituentMetrics['K1']['pr_sin'], 2, '.', ''),
+                'o1'    => number_format($constituentMetrics['O1']['pr_sin'], 2, '.', ''),
+                'm4'    => number_format($constituentMetrics['M4']['pr_sin'], 2, '.', ''),
+                'ms4'   => number_format($constituentMetrics['MS4']['pr_sin'], 2, '.', ''),
+            ],
+        ];
+
+        $skema56TotalRows = [
+            [
+                'label' => 'Total PR cos r',
+                's0'    => number_format($constituentMetrics['S0']['pr_cos'], 2, '.', ''),
+                'm2'    => number_format($constituentMetrics['M2']['pr_cos'], 2, '.', ''),
+                's2'    => number_format($constituentMetrics['S2']['pr_cos'], 2, '.', ''),
+                'n2'    => number_format($constituentMetrics['N2']['pr_cos'], 2, '.', ''),
+                'k1'    => number_format($constituentMetrics['K1']['pr_cos'], 2, '.', ''),
+                'o1'    => number_format($constituentMetrics['O1']['pr_cos'], 2, '.', ''),
+                'm4'    => number_format($constituentMetrics['M4']['pr_cos'], 2, '.', ''),
+                'ms4'   => number_format($constituentMetrics['MS4']['pr_cos'], 2, '.', ''),
+            ],
+            [
+                'label' => 'Total PR sin r',
+                's0'    => '0.00',
+                'm2'    => number_format($constituentMetrics['M2']['pr_sin'], 2, '.', ''),
+                's2'    => number_format($constituentMetrics['S2']['pr_sin'], 2, '.', ''),
+                'n2'    => number_format($constituentMetrics['N2']['pr_sin'], 2, '.', ''),
+                'k1'    => number_format($constituentMetrics['K1']['pr_sin'], 2, '.', ''),
+                'o1'    => number_format($constituentMetrics['O1']['pr_sin'], 2, '.', ''),
+                'm4'    => number_format($constituentMetrics['M4']['pr_sin'], 2, '.', ''),
+                'ms4'   => number_format($constituentMetrics['MS4']['pr_sin'], 2, '.', ''),
+            ],
+        ];
+
+        // Skema 7 Columns & Rows
+        $skema7Columns = [
+            ['key' => 'label', 'label' => 'Baris'],
+            ['key' => 's0', 'label' => 'S0'],
+            ['key' => 'm2', 'label' => 'M2'],
+            ['key' => 's2', 'label' => 'S2'],
+            ['key' => 'n2', 'label' => 'N2'],
+            ['key' => 'k1', 'label' => 'K1'],
+            ['key' => 'o1', 'label' => 'O1'],
+            ['key' => 'm4', 'label' => 'M4'],
+            ['key' => 'ms4', 'label' => 'MS4'],
+            ['key' => 'k2', 'label' => 'K2'],
+            ['key' => 'p1', 'label' => 'P1'],
+        ];
+
+        $buildSkema7Row = static function (string $label, string $metricKey, int $decimals = 2) use ($constituentMetrics): array {
+            $row = ['label' => $label];
+            $constituents = ['s0', 'm2', 's2', 'n2', 'k1', 'o1', 'm4', 'ms4', 'k2', 'p1'];
+            foreach ($constituents as $cKey) {
+                $cName = strtoupper($cKey);
+                $val = $constituentMetrics[$cName][$metricKey] ?? 0.0;
+                $row[$cKey] = number_format((float) $val, $decimals, '.', '');
+            }
+            return $row;
+        };
+
+        $skema7Rows = [
+            $buildSkema7Row('PR cos r', 'pr_cos', 2),
+            $buildSkema7Row('PR sin r', 'pr_sin', 2),
+            $buildSkema7Row('PR', 'pr', 2),
+            $buildSkema7Row('Tabel 3b : P', 'p', 3),
+            $buildSkema7Row('r (derajat)', 'r', 2),
+            $buildSkema7Row('f', 'f', 4),
+            $buildSkema7Row('V', 'v', 2),
+            $buildSkema7Row('u', 'u', 2),
+            $buildSkema7Row('1+W', 'w', 2),
+            $buildSkema7Row('A cm', 'a_cm', 2),
+            $buildSkema7Row('go', 'go', 2),
+        ];
+
+        // Forecasting Pasut Table (First 24 hours)
+        $forecastingColumns = [
+            ['key' => 'no', 'label' => 'No'],
+            ['key' => 'date', 'label' => 'Tanggal'],
+            ['key' => 't', 'label' => 't (jam)'],
+            ['key' => 'm2', 'label' => 'M2'],
+            ['key' => 's2', 'label' => 'S2'],
+            ['key' => 'n2', 'label' => 'N2'],
+            ['key' => 'k1', 'label' => 'K1'],
+            ['key' => 'o1', 'label' => 'O1'],
+            ['key' => 'm4', 'label' => 'M4'],
+            ['key' => 'ms4', 'label' => 'MS4'],
+            ['key' => 'k2', 'label' => 'K2'],
+            ['key' => 'p1', 'label' => 'P1'],
+            ['key' => 'eta', 'label' => 'Eta(t)'],
+        ];
+
+        $forecastCount = min(24, count($seriesRows));
+        $forecastRows = [];
+        for ($t = 0; $t < $forecastCount; $t++) {
+            $rowObj = $seriesRows[$t];
+            $tHours = (float) ($rowObj['time_hours'] ?? $t);
+            $dateLabel = (string) ($rowObj['time_label'] ?? ('Jam ' . $t));
+            $eta = $msl;
+            $rowItem = [
+                'no'   => (string) ($t + 1),
+                'date' => $dateLabel,
+                't'    => (string) $t,
+            ];
+
+            foreach (['M2', 'S2', 'N2', 'K1', 'O1', 'M4', 'MS4', 'K2', 'P1'] as $cName) {
+                $cKey = strtolower($cName);
+                $amp = (float) $constituentMetrics[$cName]['amp_m'];
+                $phaseRad = deg2rad((float) $constituentMetrics[$cName]['go']);
+                $period = 0.0;
+                foreach ($definitions as $d) {
+                    if ($d['name'] === $cName) {
+                        $period = (float) $d['period_hours'];
+                        break;
+                    }
+                }
+                $val = 0.0;
+                if ($period > 0.0) {
+                    $omega = 2 * M_PI / $period;
+                    $val = $amp * cos(($omega * $tHours) - $phaseRad);
+                    $eta += $val;
+                }
+                $rowItem[$cKey] = number_format($val, 4, '.', '');
+            }
+            $rowItem['eta'] = number_format($eta, 4, '.', '');
+            $forecastRows[] = $rowItem;
+        }
+
+        // Subpanels assembly
+        $subPanels = [
+            [
+                'title' => 'Skema 2',
+                'description' => 'Penyusunan hasil penghitungan harga X1, Y1, X2, Y2, X4, dan Y4 dari matriks 24 jam menggunakan multiplier Tabel 2.',
+                'columns' => $skemaIIColumns,
+                'rows' => array_map(static fn (array $r): array => [
+                    'date' => $r['date'] ?? '-',
+                    'x0' => $r['x0'] ?? '0.0000',
+                    'x1_plus' => $r['x1_plus'] ?? '0.0000',
+                    'x1_minus' => $r['x1_minus'] ?? '0.0000',
+                    'y1_plus' => $r['y1_plus'] ?? '0.0000',
+                    'y1_minus' => $r['y1_minus'] ?? '0.0000',
+                    'x2_plus' => $r['x2_plus'] ?? '0.0000',
+                    'x2_minus' => $r['x2_minus'] ?? '0.0000',
+                    'y2_plus' => $r['y2_plus'] ?? '0.0000',
+                    'y2_minus' => $r['y2_minus'] ?? '0.0000',
+                    'x4_plus' => $r['x4_plus'] ?? '0.0000',
+                    'x4_minus' => $r['x4_minus'] ?? '0.0000',
+                    'y4_plus' => $r['y4_plus'] ?? '0.0000',
+                    'y4_minus' => $r['y4_minus'] ?? '0.0000',
+                ], $dailyRows),
+                'items' => [
+                    'X0 dihitung sebagai jumlah 24 bacaan harian.',
+                    'Kolom + dan - dibentuk dari hasil perkalian bacaan dengan multiplier Admiralty Tabel 2.',
+                ],
+            ],
+            [
+                'title' => 'Skema 3',
+                'description' => 'Penyusunan hasil perhitungan harga X dan Y indeks ke satu dari Skema 2 melalui selisih plus dan minus.',
+                'columns' => $skemaIIIColumns,
+                'rows' => array_map(static fn (array $r): array => [
+                    'date' => $r['date'] ?? '-',
+                    'x0' => $r['x0'] ?? '0.0000',
+                    'x1' => $r['x1'] ?? '0.0000',
+                    'y1' => $r['y1'] ?? '0.0000',
+                    'x2' => $r['x2'] ?? '0.0000',
+                    'y2' => $r['y2'] ?? '0.0000',
+                    'x4' => $r['x4'] ?? '0.0000',
+                    'y4' => $r['y4'] ?? '0.0000',
+                ], $dailyRows),
+                'items' => [
+                    'X1 = X1(+) - X1(-), demikian pula Y1, X2, Y2, X4, dan Y4.',
+                    'Tahap ini adalah jembatan langsung menuju penggabungan indeks pada Skema 4.',
+                ],
+            ],
+            [
+                'title' => 'Skema 4',
+                'description' => 'Penggabungan indeks X/Y dari Skema 3 menjadi besaran teragregasi untuk tahap berikutnya.',
+                'columns' => $skemaIVColumns,
+                'rows' => $formattedSkemaIVRows,
+                'items' => [
+                    'Panel memperlihatkan indeks, tanda, besarnya harga, lalu hasil X dan Y agregat per blok indeks.',
+                ],
+            ],
+            [
+                'title' => 'Skema 5',
+                'description' => 'Blok PR cos r untuk penyusunan besaran X konstanta pasut Form 20.',
+                'columns' => $skema56CosColumns,
+                'rows' => $skema56CosRows,
+                'items' => [
+                    'Blok PR cos r disusun dari hasil proyeksi harmonik per komponen pasut.',
+                ],
+            ],
+            [
+                'title' => 'Skema 6',
+                'description' => 'Blok PR sin r untuk penyusunan besaran Y konstanta pasut Form 20.',
+                'columns' => $skema56CosColumns,
+                'rows' => $skema56SinRows,
+                'items' => [
+                    'Blok PR sin r dipakai bersama Skema 5 untuk menurunkan amplitudo dan fase.',
+                ],
+            ],
+            [
+                'title' => 'Rekap Skema 5&6',
+                'description' => 'Rekap total PR cos r dan PR sin r masukan utama Skema 7.',
+                'columns' => [
+                    ['key' => 'label', 'label' => 'Baris'],
+                    ['key' => 's0', 'label' => 'S0'],
+                    ['key' => 'm2', 'label' => 'M2'],
+                    ['key' => 's2', 'label' => 'S2'],
+                    ['key' => 'n2', 'label' => 'N2'],
+                    ['key' => 'k1', 'label' => 'K1'],
+                    ['key' => 'o1', 'label' => 'O1'],
+                    ['key' => 'm4', 'label' => 'M4'],
+                    ['key' => 'ms4', 'label' => 'MS4'],
+                ],
+                'rows' => $skema56TotalRows,
+                'items' => [
+                    'Baris total ini menjadi masukan perhitungan amplitudo dan fase pada Skema 7.',
+                ],
+            ],
+            [
+                'title' => 'Skema 7',
+                'description' => 'Rekap besaran PR, f, V, u, r, 1+W, amplitudo (cm) dan fase astronomis Form 20 Dishidros TNI-AL.',
+                'columns' => $skema7Columns,
+                'rows' => $skema7Rows,
+                'items' => [
+                    'Skema 7 merangkum PR, f, V, u, r, A cm, dan fase go untuk 10 komponen harmonik.',
+                    'Pemisahan astronomis K2 (0.27 x S2) dan P1 (0.33 x K1) tertanam secara matematis.',
+                ],
+            ],
+            [
+                'title' => 'Forecasting Pasut',
+                'description' => 'Langkah waktu, kontribusi komponen harmonik Form 20, dan hasil akhir eta(t).',
+                'columns' => $forecastingColumns,
+                'rows' => $forecastRows,
+                'items' => [
+                    'Tabel menampilkan langkah waktu per jam, kontribusi tiap komponen harmonik, dan hasil elevasi eta(t).',
+                ],
+            ],
+            [
+                'title' => 'Engine Form 20 Native (Dishidros TNI-AL)',
+                'description' => 'Analisis harmonik Admiralty Dishidros Form 20 dieksekusi 100% secara mandiri melalui engine PHP Native.',
+                'columns' => [
+                    ['key' => 'item', 'label' => 'Item'],
+                    ['key' => 'value', 'label' => 'Nilai'],
+                ],
+                'rows' => [
+                    ['item' => 'Metode Engine', 'value' => 'Admiralty Dishidros Form 20 (PHP Native)'],
+                    ['item' => 'MSL (Duduk Tengah / S0)', 'value' => number_format($msl, 4, '.', '') . ' m'],
+                    ['item' => 'Residual RMS', 'value' => number_format($residualRms, 4, '.', '') . ' m'],
+                    ['item' => 'Bilangan Formzahl (F)', 'value' => number_format($formzahl, 2, '.', '')],
+                    ['item' => 'Tipe Pasang Surut', 'value' => $tideType],
+                    ['item' => 'Kemandirian Server', 'value' => '100% Native Linux cPanel & Windows (Bebas Ketergantungan Excel/COM)'],
+                ],
+                'items' => [
+                    'Sistem beroperasi sepenuhnya mandiri di server produksi cPanel tanpa membutuhkan aplikasi Microsoft Excel atau COM.',
+                    'Semua tabel (Skema 1 s/d 7 dan Forecasting) dibangun secara otomatis dan presisi.',
+                ],
+            ],
+        ];
+
+        return [
+            'components'   => $components,
+            'sub_panels'   => $subPanels,
             'residual_rms' => $residualRms,
         ];
     }

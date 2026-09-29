@@ -176,7 +176,7 @@ class Tides extends BaseController
             $modelNames = array_filter([trim((string) $modelNames)]);
         }
 
-        $allowedModels = ['admiralty_indonesia', 'admiralty_hidros', 'admiralty_cat_a', 'least_square'];
+        $allowedModels = ['admiralty_indonesia', 'admiralty_cat_a', 'least_square'];
         $modelNames    = array_values(array_filter(
             array_map(static fn ($value): string => trim((string) $value), $modelNames),
             static fn (string $value): bool => in_array($value, $allowedModels, true),
