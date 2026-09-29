@@ -637,6 +637,59 @@
           </div>
         </div>
 
+        <!-- Tidal Datums Elevation Chart Card (Reference Elevation Lines) -->
+        <div class="border border-slate-200 rounded-2xl p-5 bg-white shadow-xs flex flex-col gap-3">
+          <div class="flex items-center justify-between flex-wrap gap-2 pb-2 border-b border-slate-100">
+            <div>
+              <h4 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+                <i class="fa-solid fa-chart-line text-sky-600"></i>
+                <span id="datumChartHeaderTitle">Grafik Kedudukan Elevasi Penting Pasang Surut</span>
+                <span class="text-xs font-semibold px-2 py-0.5 rounded-md bg-sky-100 text-sky-800" id="datumChartModelBadge">Admiralty Indonesia</span>
+              </h4>
+              <p class="text-[11px] text-slate-500 mt-0.5" id="datumChartHeaderDesc">
+                Visualisasi kurva fluktuasi muka air terhadap garis elevasi datum astronomis (HAT, HHWL, MHWS, MHWL, MHWN, MSL, MLWN, MLWL, MLWS, LLWL, LAT).
+              </p>
+            </div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <!-- Engine Selector for Chart -->
+              <div id="datumChartEngineSelectorWrap" class="flex items-center gap-1.5 text-xs text-slate-600">
+                <span class="font-medium text-[11px] text-slate-500">Engine Acuan:</span>
+                <select id="datumChartEngineSelect" class="border border-slate-200 rounded-lg px-2 py-1 text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:ring-1 focus:ring-sky-500 cursor-pointer">
+                  <option value="admiralty_indonesia">Admiralty Indonesia (Dishidros Form 20)</option>
+                  <option value="admiralty_cat_a">Admiralty Cat A (IHO)</option>
+                  <option value="least_square">Least Square</option>
+                </select>
+              </div>
+              <!-- Curve Selector: Both vs Observasi vs Model -->
+              <div class="flex items-center bg-slate-100 p-0.5 rounded-lg text-xs font-semibold">
+                <button type="button" id="datumChartBtnBoth" class="px-2.5 py-1 rounded-md text-xs cursor-pointer bg-white text-slate-900 shadow-xs font-bold transition">Semua Kurva</button>
+                <button type="button" id="datumChartBtnObserved" class="px-2.5 py-1 rounded-md text-xs cursor-pointer text-slate-500 hover:text-slate-800 transition">Observasi Saja</button>
+                <button type="button" id="datumChartBtnModel" class="px-2.5 py-1 rounded-md text-xs cursor-pointer text-slate-500 hover:text-slate-800 transition">Model Saja</button>
+              </div>
+              <!-- Download PNG -->
+              <button type="button" id="exportDatumChartPngButton" class="text-xs font-semibold text-slate-700 hover:text-sky-600 bg-white border border-slate-200 hover:border-sky-300 px-3 py-1 rounded-lg shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+                <i class="fa-solid fa-camera text-slate-400"></i>
+                <span>Simpan Gambar PNG</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="relative w-full h-[420px] md:h-[480px]">
+            <canvas id="datumElevationChartCanvas"></canvas>
+          </div>
+          
+          <div class="flex items-center justify-between text-[11px] text-slate-500 pt-1 border-t border-slate-50 flex-wrap gap-2">
+            <div class="flex items-center gap-2.5 flex-wrap text-[10px]">
+              <span class="inline-flex items-center gap-1"><span class="w-3 h-0.5 bg-rose-700 inline-block border-t border-dashed border-rose-700"></span> <strong>HAT / HHWL</strong> (Ekstrem Pasang)</span>
+              <span class="inline-flex items-center gap-1"><span class="w-3 h-0.5 bg-amber-600 inline-block border-t border-dashed border-amber-600"></span> <strong>MHWS / MHWL / MHWN</strong> (Pasang Rerata)</span>
+              <span class="inline-flex items-center gap-1"><span class="w-3 h-0.5 bg-slate-900 inline-block"></span> <strong>MSL</strong> (Duduk Tengah Acuan)</span>
+              <span class="inline-flex items-center gap-1"><span class="w-3 h-0.5 bg-teal-600 inline-block border-t border-dashed border-teal-600"></span> <strong>MLWN / MLWL / MLWS</strong> (Surut Rerata)</span>
+              <span class="inline-flex items-center gap-1"><span class="w-3 h-0.5 bg-violet-700 inline-block border-t border-dashed border-violet-700"></span> <strong>LLWL / LAT</strong> (Ekstrem Surut)</span>
+            </div>
+            <span class="italic text-slate-400">💡 Klik nama garis pada legenda untuk filter garis datum</span>
+          </div>
+        </div>
+
         <!-- Information Note -->
         <div class="text-[11px] text-slate-600 bg-slate-50/80 border border-slate-200/80 rounded-xl p-3 flex items-start gap-2.5">
           <i class="fa-solid fa-circle-info text-sky-600 text-sm mt-0.5"></i>
@@ -1165,6 +1218,9 @@
     let latestObservedPoints = [];
     let comparisonChartInstance = null;
     let predictionChartInstance = null;
+    let datumChartInstance = null;
+    let datumChartCurveMode = 'both';
+    let datumChartActiveEngine = 'admiralty_indonesia';
     let latestComparisonChartExport = null;
     let comparisonChartVisibility = {};
 
@@ -1816,6 +1872,9 @@
 
     function selectDatumModel(modelName){
       currentDatumSelectedModel = modelName;
+      if(modelName !== 'compare'){
+        datumChartActiveEngine = modelName;
+      }
       renderTidalDatums();
     }
     window.selectDatumModel = selectDatumModel;
@@ -1877,6 +1936,9 @@
       setText('datumNeapRange', calib.neapRange.toFixed(3) + ' m');
       setText('datumMeanRange', calib.meanRange.toFixed(3) + ' m');
       setText('datumMaxRange', calib.maxRange.toFixed(3) + ' m');
+
+      // Update Datum Elevation Chart for this model
+      renderDatumElevationChart(modelName);
     }
 
     function renderMultiModelDatumsComparison(){
@@ -1950,6 +2012,9 @@
       });
 
       bodyEl.innerHTML = bodyHtml;
+
+      // Update Datum Elevation Chart for comparison mode
+      renderDatumElevationChart(datumChartActiveEngine);
     }
 
     function exportTidalDatumsCsv(){
@@ -2059,6 +2124,283 @@
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+    }
+
+    function renderDatumElevationChart(targetEngine){
+      const canvas = document.getElementById('datumElevationChartCanvas');
+      if(!canvas || !Array.isArray(latestCalculationResults) || !latestCalculationResults.length) return;
+
+      if(targetEngine && targetEngine !== 'compare'){
+        datumChartActiveEngine = targetEngine;
+      }
+      const engineSelect = document.getElementById('datumChartEngineSelect');
+      if(engineSelect && engineSelect.value !== datumChartActiveEngine){
+        engineSelect.value = datumChartActiveEngine;
+      }
+
+      // Find calculation result for active engine
+      const res = latestCalculationResults.find(r => (r.summary && r.summary.model_name === datumChartActiveEngine)) || latestCalculationResults[0];
+      if(!res) return;
+
+      const sm = res.summary || {};
+      const modelLabel = sm.model_label || sm.model_name || 'Model';
+      const badge = document.getElementById('datumChartModelBadge');
+      if(badge) badge.textContent = modelLabel;
+
+      const chartSource = latestCalculationResults.find(r => r.comparison_chart && Array.isArray(r.comparison_chart.labels) && r.comparison_chart.labels.length > 0);
+      const labels = (chartSource && chartSource.comparison_chart && chartSource.comparison_chart.labels) ? chartSource.comparison_chart.labels : [];
+      if(!labels.length) return;
+
+      // Components and Datum Calculation
+      const components = Array.isArray(res.component_targets) ? res.component_targets : ((res.comparison_chart && res.comparison_chart.adjustment_basis && res.comparison_chart.adjustment_basis.components) ? res.comparison_chart.adjustment_basis.components : []);
+      const adjBasis = (res.comparison_chart && res.comparison_chart.adjustment_basis) ? res.comparison_chart.adjustment_basis : null;
+      const offset = (adjBasis && typeof adjBasis.offset === 'number') ? adjBasis.offset : num(sm.msl, 0);
+      const state = getAdjustmentStateForModel(sm.model_name);
+      const calib = computeDatumsFromComponents(offset, components, state);
+
+      // Model Points (with adjustment if applicable)
+      let modelPts = [];
+      if(sm.model_name === 'admiralty_indonesia' && latestIndonesiaAdjustmentBasis){
+        modelPts = buildAdjustedIndonesiaSeries() || (res.comparison_chart && res.comparison_chart.series && res.comparison_chart.series[0] ? res.comparison_chart.series[0].points : []);
+      } else if(sm.model_name === 'admiralty_cat_a' && latestCatAAdjustmentBasis){
+        modelPts = buildAdjustedCatASeries() || (res.comparison_chart && res.comparison_chart.series && res.comparison_chart.series[0] ? res.comparison_chart.series[0].points : []);
+      } else if(sm.model_name === 'least_square' && latestLeastSquareAdjustmentBasis){
+        modelPts = buildAdjustedLeastSquareSeries() || (res.comparison_chart && res.comparison_chart.series && res.comparison_chart.series[0] ? res.comparison_chart.series[0].points : []);
+      } else if(res.comparison_chart && Array.isArray(res.comparison_chart.series) && res.comparison_chart.series.length){
+        modelPts = res.comparison_chart.series[0].points || [];
+      }
+
+      const modelColors = {
+        admiralty_indonesia: '#0f766e',
+        admiralty_cat_a: '#b91c1c',
+        least_square: '#2563eb'
+      };
+      const modelColor = modelColors[sm.model_name] || '#0284c7';
+
+      // Build Datasets
+      const datasets = [];
+
+      // 1. Observed Curve
+      if(datumChartCurveMode === 'both' || datumChartCurveMode === 'observed'){
+        if(Array.isArray(latestObservedPoints) && latestObservedPoints.length){
+          datasets.push({
+            label: 'Observasi Riil',
+            data: latestObservedPoints,
+            borderColor: '#0f172a',
+            backgroundColor: 'transparent',
+            borderWidth: 1.8,
+            pointRadius: 1,
+            pointHoverRadius: 4,
+            tension: 0.15,
+            order: 1
+          });
+        }
+      }
+
+      // 2. Model Curve
+      if(datumChartCurveMode === 'both' || datumChartCurveMode === 'model'){
+        if(Array.isArray(modelPts) && modelPts.length){
+          datasets.push({
+            label: `${modelLabel} (Terkalibrasi)`,
+            data: modelPts,
+            borderColor: modelColor,
+            backgroundColor: 'transparent',
+            borderWidth: 1.8,
+            borderDash: [3, 2],
+            pointRadius: 0,
+            pointHoverRadius: 3,
+            tension: 0.15,
+            order: 2
+          });
+        }
+      }
+
+      // 3. The 11 Tidal Datum Horizontal Lines
+      const datumPalette = {
+        HAT:  { color: '#b91c1c', dash: [6, 4], width: 1.6 },
+        HHWL: { color: '#ea580c', dash: [6, 4], width: 1.6 },
+        MHWS: { color: '#d97706', dash: [5, 4], width: 1.6 },
+        MHWL: { color: '#0284c7', dash: [4, 4], width: 1.6 },
+        MHWN: { color: '#ca8a04', dash: [4, 4], width: 1.6 },
+        MSL:  { color: '#0f172a', dash: [],     width: 2.2 },
+        MLWN: { color: '#0d9488', dash: [4, 4], width: 1.6 },
+        MLWL: { color: '#2563eb', dash: [4, 4], width: 1.6 },
+        MLWS: { color: '#7c3aed', dash: [5, 4], width: 1.6 },
+        LLWL: { color: '#c026d3', dash: [6, 4], width: 1.6 },
+        LAT:  { color: '#4338ca', dash: [6, 4], width: 1.6 }
+      };
+
+      TIDAL_DATUM_SPECS.forEach(spec => {
+        const val = typeof calib[spec.key] === 'number' ? calib[spec.key] : 0;
+        const pal = datumPalette[spec.code] || { color: '#64748b', dash: [4, 4], width: 1.5 };
+        datasets.push({
+          label: `${spec.code} (${val.toFixed(3)} m)`,
+          datumCode: spec.code,
+          datumValue: val,
+          isDatumLine: true,
+          data: Array(labels.length).fill(val),
+          borderColor: pal.color,
+          borderWidth: pal.width,
+          borderDash: pal.dash,
+          pointRadius: 0,
+          pointHitRadius: 0,
+          fill: false,
+          order: 10
+        });
+      });
+
+      if(datumChartInstance){
+        datumChartInstance.destroy();
+        datumChartInstance = null;
+      }
+
+      // Custom Plugin: Draw Badges on Right Edge (exact match to hydrographic chart format)
+      const datumRightBadgesPlugin = {
+        id: 'datumRightBadgesPlugin',
+        afterDraw(chart){
+          const ctx = chart.ctx;
+          const yAxis = chart.scales.y;
+          const chartArea = chart.chartArea;
+          if(!yAxis || !chartArea) return;
+
+          chart.data.datasets.forEach((dataset, index) => {
+            if(!dataset.isDatumLine || !dataset.datumCode) return;
+            const meta = chart.getDatasetMeta(index);
+            if(meta && meta.hidden) return;
+
+            const val = dataset.datumValue;
+            if(typeof val !== 'number' || isNaN(val)) return;
+
+            const yPixel = yAxis.getPixelForValue(val);
+            if(yPixel < chartArea.top - 8 || yPixel > chartArea.bottom + 8) return;
+
+            const text = dataset.datumCode;
+            ctx.save();
+            ctx.font = 'bold 9px monospace, sans-serif';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            const textWidth = ctx.measureText(text).width;
+            const x = chartArea.right + 5;
+            const y = yPixel;
+
+            // Background badge
+            ctx.fillStyle = '#ffffff';
+            ctx.strokeStyle = dataset.borderColor || '#64748b';
+            ctx.lineWidth = 1;
+            const padX = 3;
+            const badgeW = textWidth + padX * 2;
+            const badgeH = 13;
+
+            ctx.beginPath();
+            if(ctx.roundRect){
+              ctx.roundRect(x, y - 6.5, badgeW, badgeH, 2);
+            } else {
+              ctx.rect(x, y - 6.5, badgeW, badgeH);
+            }
+            ctx.fill();
+            ctx.stroke();
+
+            // Text
+            ctx.fillStyle = dataset.borderColor || '#0f172a';
+            ctx.fillText(text, x + padX, y);
+            ctx.restore();
+          });
+        }
+      };
+
+      datumChartInstance = new Chart(canvas.getContext('2d'), {
+        type: 'line',
+        data: { labels, datasets },
+        plugins: [datumRightBadgesPlugin],
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: false,
+          interaction: { mode: 'index', intersect: false },
+          layout: {
+            padding: { right: 55, left: 5, top: 10, bottom: 5 }
+          },
+          plugins: {
+            legend: {
+              position: 'top',
+              labels: {
+                boxWidth: 14,
+                boxHeight: 2,
+                font: { size: 10, weight: 'bold' },
+                padding: 8,
+                usePointStyle: false
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(ctx){
+                  const ds = ctx.dataset;
+                  if(ds.isDatumLine){
+                    return `${ds.datumCode}: ${ctx.parsed.y.toFixed(4)} m`;
+                  }
+                  return `${ds.label}: ${ctx.parsed.y.toFixed(4)} m`;
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              grid: { color: '#f1f5f9' },
+              title: { display: true, text: 'Elevasi Muka Air (m)', font: { size: 11, weight: 'bold' } }
+            },
+            x: {
+              grid: { display: false },
+              ticks: { maxTicksLimit: 12, autoSkip: true, font: { size: 10 } }
+            }
+          }
+        }
+      });
+    }
+
+    // UI listeners for Datum Chart
+    const datumEngineSelect = document.getElementById('datumChartEngineSelect');
+    if(datumEngineSelect){
+      datumEngineSelect.addEventListener('change', function(e){
+        datumChartActiveEngine = e.target.value;
+        renderDatumElevationChart(datumChartActiveEngine);
+      });
+    }
+
+    const datumBtnBoth = document.getElementById('datumChartBtnBoth');
+    const datumBtnObs = document.getElementById('datumChartBtnObserved');
+    const datumBtnMod = document.getElementById('datumChartBtnModel');
+
+    function setDatumCurveMode(mode){
+      datumChartCurveMode = mode;
+      [datumBtnBoth, datumBtnObs, datumBtnMod].forEach(b => {
+        if(!b) return;
+        b.className = 'px-2.5 py-1 rounded-md text-xs cursor-pointer text-slate-500 hover:text-slate-800 transition';
+      });
+      const activeBtn = mode === 'both' ? datumBtnBoth : (mode === 'observed' ? datumBtnObs : datumBtnMod);
+      if(activeBtn){
+        activeBtn.className = 'px-2.5 py-1 rounded-md text-xs cursor-pointer bg-white text-slate-900 shadow-xs font-bold transition';
+      }
+      renderDatumElevationChart(datumChartActiveEngine);
+    }
+    if(datumBtnBoth) datumBtnBoth.addEventListener('click', () => setDatumCurveMode('both'));
+    if(datumBtnObs) datumBtnObs.addEventListener('click', () => setDatumCurveMode('observed'));
+    if(datumBtnMod) datumBtnMod.addEventListener('click', () => setDatumCurveMode('model'));
+
+    const exportDatumPngBtn = document.getElementById('exportDatumChartPngButton');
+    if(exportDatumPngBtn){
+      exportDatumPngBtn.addEventListener('click', function(){
+        if(!datumChartInstance){
+          window.alert('Grafik elevasi pasut belum tersedia.');
+          return;
+        }
+        const station = (latestCalculationResults[0] && latestCalculationResults[0].summary && latestCalculationResults[0].summary.station_name) || 'stasiun_pasut';
+        const link = document.createElement('a');
+        link.download = `grafik_elevasi_pasut_${String(station).replace(/[^a-zA-Z0-9_-]/g, '_')}_${datumChartActiveEngine}_${new Date().toISOString().slice(0, 10)}.png`;
+        link.href = datumChartInstance.toBase64Image('image/png', 1.0);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      });
     }
 
     function captureComparisonChartVisibility(){
