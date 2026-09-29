@@ -2322,24 +2322,24 @@ class AdmiraltyCalculator
                 ],
             ];
         } catch (RuntimeException $exception) {
-            $lsAnalysis = $this->runLeastSquareAnalysis($prepared);
-            $indonesiaComponentTargets = $lsAnalysis['components'];
+            $catAnalysis = $this->runAdmiraltyCatAAnalysis($prepared);
+            $indonesiaComponentTargets = $catAnalysis['components'];
             $resolvedDatum = $this->resolvePredictionOffset($indonesiaComponentTargets, $msl);
 
             $subPanels[] = [
-                'title' => 'Engine Harmonik Native (Server Production)',
-                'description' => 'Komputasi harmonik pasang surut berjalan menggunakan engine numerik native PHP server-side.',
+                'title' => 'Engine Admiralty Harmonik Native (Server Production)',
+                'description' => 'Metode analisis harmonik Admiralty dieksekusi menggunakan proyeksi trigonometrik Form 20 server-side.',
                 'columns' => [
                     ['key' => 'item', 'label' => 'Item'],
                     ['key' => 'value', 'label' => 'Nilai'],
                 ],
                 'rows' => [
-                    ['item' => 'Mode Engine', 'value' => 'PHP Native Harmonic Engine (Linux/cPanel Compatible)'],
-                    ['item' => 'Residual RMS', 'value' => number_format((float) ($lsAnalysis['residual_rms'] ?? 0.0), 4, '.', '') . ' m'],
+                    ['item' => 'Metode', 'value' => 'Admiralty Harmonic Analysis (Pure PHP)'],
+                    ['item' => 'Residual RMS', 'value' => number_format((float) ($catAnalysis['residual_rms'] ?? 0.0), 4, '.', '') . ' m'],
                     ['item' => 'Datum S0', 'value' => number_format($resolvedDatum, 4, '.', '') . ' m'],
                 ],
                 'items' => [
-                    'Engine Excel desktop otomatis dialihkan ke komputasi harmonik native PHP presisi tinggi untuk kompatibilitas penuh dengan server Linux cPanel.',
+                    'Analisis harmonik Admiralty berjalan secara mandiri dan presisi di server Linux hosting tanpa ketergantungan pada aplikasi desktop Windows.',
                 ],
             ];
         }
