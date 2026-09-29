@@ -22,7 +22,7 @@ rpasoet_*.sql
 *.tar.gz
 *.rar
 wip_*
-sample_pasut_*.csv
+/sample_pasut_*.csv
 
 # OS & Editor
 .vscode/

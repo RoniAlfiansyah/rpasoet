@@ -266,30 +266,40 @@ class Tides extends BaseController
 
     public function downloadSample(string $type = '30days'): ResponseInterface
     {
-        $filename = ($type === '15days' || $type === '15hari')
-            ? 'sample_pasut_15hari.csv'
-            : 'sample_pasut_30hari.csv';
+        $days = ($type === '15days' || $type === '15hari') ? 15 : 30;
+        $filename = "sample_pasut_{$days}hari.csv";
 
         $candidates = [
+            FCPATH . 'samples/' . $filename,
             FCPATH . 'public/samples/' . $filename,
             ROOTPATH . 'public/samples/' . $filename,
+            ROOTPATH . 'samples/' . $filename,
             ROOTPATH . $filename,
             FCPATH . $filename,
         ];
 
-        $filePath = null;
         foreach ($candidates as $cand) {
             if (is_file($cand)) {
-                $filePath = $cand;
-                break;
+                return $this->response->download($cand, null)->setFileName($filename);
             }
         }
 
-        if ($filePath === null) {
-            return $this->response->setStatusCode(404)->setBody('Sample data tidak ditemukan di server.');
+        // Fallback: Generate valid realistic synthetic tide data on the fly
+        $lines = ["Datetime,Elevation_m"];
+        $startDate = strtotime('2026-08-01 00:00:00');
+        $totalHours = $days * 24;
+        for ($i = 0; $i <= $totalHours; $i++) {
+            $t = $startDate + ($i * 3600);
+            $dtStr = date('Y-m-d H:i:s', $t);
+            $elev = 1.85 + 0.65 * sin(2 * M_PI * $i / 12.42) + 0.35 * sin(2 * M_PI * $i / 12.00) + 0.20 * sin(2 * M_PI * $i / 23.93) + (mt_rand(-5, 5) / 100.0);
+            $lines[] = "{$dtStr}," . number_format($elev, 3, '.', '');
         }
+        $csvContent = implode("\r\n", $lines);
 
-        return $this->response->download($filePath, null)->setFileName($filename);
+        return $this->response
+            ->setHeader('Content-Type', 'text/csv; charset=UTF-8')
+            ->setHeader('Content-Disposition', 'attachment; filename="' . $filename . '"')
+            ->setBody($csvContent);
     }
 
     public function fetchRange(): ResponseInterface
