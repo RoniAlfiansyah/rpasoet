@@ -63,6 +63,17 @@
           <i class="fa-solid fa-chart-line text-sky-600"></i>
           <span>Tide Predictor (Admiralty)</span>
         </a>
+
+        <?php if (session('is_authorized')): ?>
+          <div class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-700" title="Personel Terotentikasi">
+            <i class="fa-solid fa-user-check text-emerald-600 text-xs"></i>
+            <span class="max-w-[130px] truncate"><?= esc(session('auth_user_name') ?: 'Surveyor') ?></span>
+          </div>
+          <a href="<?= site_url('logout') ?>" class="text-xs font-semibold text-rose-600 hover:text-white hover:bg-rose-600 px-3 py-1.5 rounded-xl border border-rose-200 bg-rose-50 transition flex items-center gap-1.5 shadow-xs" title="Keluar dari sesi sistem">
+            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+            <span class="hidden sm:inline">Logout</span>
+          </a>
+        <?php endif; ?>
       </div>
     </div>
   </header>

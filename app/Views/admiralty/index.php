@@ -69,6 +69,17 @@
         <button type="button" class="reset-admiralty-btn text-xs font-semibold text-rose-600 hover:text-rose-700 px-3.5 py-1.5 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 transition flex items-center gap-1.5" style="display:none;" title="Bersihkan dan mulai dari awal">
           <i class="fa-solid fa-rotate-left"></i>Reset Sesi
         </button>
+
+        <?php if (session('is_authorized')): ?>
+          <div class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-700" title="Personel Terotentikasi">
+            <i class="fa-solid fa-user-check text-emerald-600 text-xs"></i>
+            <span class="max-w-[130px] truncate"><?= esc(session('auth_user_name') ?: 'Surveyor') ?></span>
+          </div>
+          <a href="<?= site_url('logout') ?>" class="text-xs font-semibold text-rose-600 hover:text-white hover:bg-rose-600 px-3 py-1.5 rounded-xl border border-rose-200 bg-rose-50 transition flex items-center gap-1.5 shadow-xs" title="Keluar dari sesi sistem">
+            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+            <span class="hidden sm:inline">Logout</span>
+          </a>
+        <?php endif; ?>
       </div>
     </div>
   </header>
@@ -1183,7 +1194,7 @@
               </div>
               <div>
                 <label class="block text-[11px] font-semibold text-slate-600 mb-1">Pelaksana Survei (Surveyor)</label>
-                <input type="text" id="reportParamSurveyor" value="Surveyor Hidrografi" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-800 focus:ring-1 focus:ring-sky-500 text-xs">
+                <input type="text" id="reportParamSurveyor" value="<?= esc(session('auth_user_name') ?: 'Surveyor Hidrografi') ?>" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-800 focus:ring-1 focus:ring-sky-500 text-xs">
               </div>
               <div>
                 <label class="block text-[11px] font-semibold text-slate-600 mb-1">Quality Control (QC)</label>

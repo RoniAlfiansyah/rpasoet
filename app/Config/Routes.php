@@ -17,3 +17,8 @@ $routes->get('/admiralty/download-sample/(:segment)', 'Tides::downloadSample/$1'
 $routes->get('/admiralty/download-sample', 'Tides::downloadSample');
 $routes->get('/tides/fetch-day', 'Tides::fetchDay');
 $routes->get('/tides/fetch-range', 'Tides::fetchRange');
+
+// Authentication Routes (Passcode Access)
+$routes->get('/login', 'Auth::login');
+$routes->post('/login', 'Auth::processLogin');
+$routes->get('/logout', 'Auth::logout');
