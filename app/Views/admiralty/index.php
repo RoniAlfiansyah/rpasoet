@@ -2642,6 +2642,9 @@
       }).join('');
       setHtml('comparisonSummaryBody', summaryRows);
 
+      // Reset chart visibility on new calculation so all curves appear
+      comparisonChartVisibility = {};
+
       // Comparison Chart
       renderComparisonChart(results);
 
@@ -2653,7 +2656,6 @@
       const canvas = document.getElementById('comparisonChartCanvas');
       if(!canvas) return;
 
-      captureComparisonChartVisibility();
       if(comparisonChartInstance){ comparisonChartInstance.destroy(); comparisonChartInstance = null; }
 
       const chartSource = results.find(r => r.comparison_chart && Array.isArray(r.comparison_chart.labels) && r.comparison_chart.labels.length > 0);
