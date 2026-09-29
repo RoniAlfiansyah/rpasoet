@@ -608,7 +608,7 @@
               <div class="p-3 rounded-xl border border-slate-200 bg-slate-50/70 flex flex-col justify-between">
                 <div>
                   <div class="text-[11px] font-bold text-slate-700">Tunggang Rerata (Mean Range)</div>
-                  <div class="text-[10px] text-slate-500 font-mono">2 × (M2 + K1 + O1)</div>
+                  <div class="text-[10px] text-slate-500 font-mono">2 × M2</div>
                 </div>
                 <div class="text-lg font-extrabold text-slate-900 font-mono mt-2" id="datumMeanRange">-</div>
               </div>
@@ -1630,12 +1630,28 @@
         key: 'hat'
       },
       {
+        code: 'HHWL',
+        name: 'Highest High Water Level',
+        desc: 'Air Pasang Tertinggi Campuran (Spring Diurnal)',
+        formula: 'S0 + (M2 + S2 + K1 + O1)',
+        badgeClass: 'bg-orange-100 text-orange-800 border border-orange-200',
+        key: 'hhwl'
+      },
+      {
         code: 'MHWS',
         name: 'Mean High Water Springs',
         desc: 'Rerata Air Tinggi Purnama (Spring High)',
         formula: 'S0 + (M2 + S2)',
         badgeClass: 'bg-emerald-100 text-emerald-800 border border-emerald-200',
         key: 'mhws'
+      },
+      {
+        code: 'MHWL',
+        name: 'Mean High Water Level',
+        desc: 'Rerata Muka Air Tinggi (Rata-rata Pasang)',
+        formula: 'S0 + M2',
+        badgeClass: 'bg-sky-100 text-sky-800 border border-sky-200',
+        key: 'mhwl'
       },
       {
         code: 'MHWN',
@@ -1646,28 +1662,12 @@
         key: 'mhwn'
       },
       {
-        code: 'MHWL',
-        name: 'Mean High Water Level',
-        desc: 'Rerata Muka Air Tinggi',
-        formula: 'S0 + (M2 + K1 + O1)',
-        badgeClass: 'bg-sky-100 text-sky-800 border border-sky-200',
-        key: 'mhwl'
-      },
-      {
         code: 'MSL',
         name: 'Mean Sea Level (S0)',
         desc: 'Muka Air Laut Rata-rata (Datum Acuan)',
         formula: 'S0',
         badgeClass: 'bg-slate-200 text-slate-800 border border-slate-300',
         key: 'msl'
-      },
-      {
-        code: 'MLWL',
-        name: 'Mean Low Water Level',
-        desc: 'Rerata Muka Air Rendah',
-        formula: 'S0 - (M2 + K1 + O1)',
-        badgeClass: 'bg-blue-100 text-blue-800 border border-blue-200',
-        key: 'mlwl'
       },
       {
         code: 'MLWN',
@@ -1678,12 +1678,28 @@
         key: 'mlwn'
       },
       {
+        code: 'MLWL',
+        name: 'Mean Low Water Level',
+        desc: 'Rerata Muka Air Rendah (Rata-rata Surut)',
+        formula: 'S0 - M2',
+        badgeClass: 'bg-blue-100 text-blue-800 border border-blue-200',
+        key: 'mlwl'
+      },
+      {
         code: 'MLWS',
         name: 'Mean Low Water Springs',
         desc: 'Rerata Air Rendah Purnama (Spring Low)',
         formula: 'S0 - (M2 + S2)',
         badgeClass: 'bg-purple-100 text-purple-800 border border-purple-200',
         key: 'mlws'
+      },
+      {
+        code: 'LLWL',
+        name: 'Lowest Low Water Level',
+        desc: 'Air Surut Terendah Campuran',
+        formula: 'S0 - (M2 + S2 + K1 + O1)',
+        badgeClass: 'bg-fuchsia-100 text-fuchsia-800 border border-fuchsia-200',
+        key: 'llwl'
       },
       {
         code: 'LAT',
@@ -1731,23 +1747,25 @@
       const o1 = amps.O1;
 
       const hat = s0 + sumAllAmps;
+      const hhwl = s0 + (m2 + s2 + k1 + o1);
       const mhws = s0 + (m2 + s2);
+      const mhwl = s0 + m2;
       const mhwn = s0 + Math.abs(m2 - s2);
-      const mhwl = s0 + (m2 + k1 + o1);
       const msl = s0;
-      const mlwl = s0 - (m2 + k1 + o1);
       const mlwn = s0 - Math.abs(m2 - s2);
+      const mlwl = s0 - m2;
       const mlws = s0 - (m2 + s2);
+      const llwl = s0 - (m2 + s2 + k1 + o1);
       const lat = s0 - sumAllAmps;
 
       const springRange = 2 * (m2 + s2);
       const neapRange = 2 * Math.abs(m2 - s2);
-      const meanRange = 2 * (m2 + k1 + o1);
+      const meanRange = 2 * m2;
       const maxRange = hat - lat;
 
       return {
         s0, sumAllAmps,
-        hat, mhws, mhwn, mhwl, msl, mlwl, mlwn, mlws, lat,
+        hat, hhwl, mhws, mhwl, mhwn, msl, mlwn, mlwl, mlws, llwl, lat,
         springRange, neapRange, meanRange, maxRange,
         amps
       };
@@ -1916,7 +1934,7 @@
       const rangeSpecs = [
         { label: 'Tunggang Purnama (Spring Range)', formula: '2 × (M2 + S2)', key: 'springRange' },
         { label: 'Tunggang Perbani (Neap Range)', formula: '2 × |M2 - S2|', key: 'neapRange' },
-        { label: 'Tunggang Rerata (Mean Range)', formula: '2 × (M2 + K1 + O1)', key: 'meanRange' },
+        { label: 'Tunggang Rerata (Mean Range)', formula: '2 × M2', key: 'meanRange' },
         { label: 'Tunggang Maks. Astronomis', formula: 'HAT - LAT (2 × Σ Ai)', key: 'maxRange' }
       ];
 
@@ -1982,7 +2000,7 @@
         const rangeSpecs = [
           { code: 'Spring Range', desc: 'Tunggang Purnama', formula: '2*(M2+S2)', key: 'springRange' },
           { code: 'Neap Range', desc: 'Tunggang Perbani', formula: '2*|M2-S2|', key: 'neapRange' },
-          { code: 'Mean Range', desc: 'Tunggang Rerata', formula: '2*(M2+K1+O1)', key: 'meanRange' },
+          { code: 'Mean Range', desc: 'Tunggang Rerata', formula: '2*M2', key: 'meanRange' },
           { code: 'Max Range', desc: 'Tunggang Maks. Astronomis', formula: 'HAT-LAT', key: 'maxRange' }
         ];
 
@@ -2023,7 +2041,7 @@
         const rangeSpecs = [
           { code: 'Spring Range', desc: 'Tunggang Purnama', formula: '2*(M2+S2)', key: 'springRange' },
           { code: 'Neap Range', desc: 'Tunggang Perbani', formula: '2*|M2-S2|', key: 'neapRange' },
-          { code: 'Mean Range', desc: 'Tunggang Rerata', formula: '2*(M2+K1+O1)', key: 'meanRange' },
+          { code: 'Mean Range', desc: 'Tunggang Rerata', formula: '2*M2', key: 'meanRange' },
           { code: 'Max Astronomical Range', desc: 'Tunggang Maks. Astronomis', formula: 'HAT-LAT', key: 'maxRange' }
         ];
 
